@@ -39,5 +39,8 @@ namespace RN_TaskManager.Models
         public int? GroupId { get; set; }
         public Group Group { get; set; }
 
+        public bool Deleted { get; set; }
+
+
     }
 }

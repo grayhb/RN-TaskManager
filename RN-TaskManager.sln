@@ -3,14 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30406.217
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RN-TaskManager.Web", "RN-TaskManager.Web\RN-TaskManager.Web.csproj", "{E6E75CA2-13BE-4001-82F9-023890D2560A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RN-TaskManager.Web", "RN-TaskManager.Web\RN-TaskManager.Web.csproj", "{E6E75CA2-13BE-4001-82F9-023890D2560A}"
 	ProjectSection(ProjectDependencies) = postProject
 		{83108254-0833-46AD-8BA7-01CD579CA77F} = {83108254-0833-46AD-8BA7-01CD579CA77F}
+		{6445BA99-0708-4AF6-986C-89E3073A1DCF} = {6445BA99-0708-4AF6-986C-89E3073A1DCF}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RN-TaskManager.Models", "RN-TaskManager.Models\RN-TaskManager.Models.csproj", "{83108254-0833-46AD-8BA7-01CD579CA77F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RN-TaskManager.Models", "RN-TaskManager.Models\RN-TaskManager.Models.csproj", "{83108254-0833-46AD-8BA7-01CD579CA77F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RN-TaskManager.DAL", "RN-TaskManager.DAL\RN-TaskManager.DAL.csproj", "{6445BA99-0708-4AF6-986C-89E3073A1DCF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RN-TaskManager.DAL", "RN-TaskManager.DAL\RN-TaskManager.DAL.csproj", "{6445BA99-0708-4AF6-986C-89E3073A1DCF}"
 	ProjectSection(ProjectDependencies) = postProject
 		{83108254-0833-46AD-8BA7-01CD579CA77F} = {83108254-0833-46AD-8BA7-01CD579CA77F}
 	EndProjectSection

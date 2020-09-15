@@ -11,5 +11,8 @@ namespace RN_TaskManager.Models
 
         public string GroupNumber { get; set; }
         public string GroupName { get; set; }
+
+        public bool Deleted { get; set; }
+
     }
 }

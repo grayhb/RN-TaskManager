@@ -1,13 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RN_TaskManager.DAL.Context;
+using RN_TaskManager.DAL.Repositories;
 
 namespace RN_TaskManager.Web
 {
@@ -23,6 +21,28 @@ namespace RN_TaskManager.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var connectionString = Configuration.GetConnectionString("devConnectionString");
+
+            #region DbContexts
+
+            services.AddDbContext<RN_TaskManagerContext>(opt =>
+            {
+                opt.UseSqlServer(connectionString, builder => builder.CommandTimeout(300));
+            });
+
+            #endregion
+
+            #region Repositoryies
+
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IGroupRepository, GroupRepository>();
+            services.AddScoped<IProjectRepository, ProjectRepository>();
+            services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
+            services.AddScoped<IProjectTaskStatusRepository, ProjectTaskStatusRepository>();
+            services.AddScoped<IProjectTaskTypeRepository, ProjectTaskTypeRepository>();
+
+            #endregion
+
             services.AddControllersWithViews();
         }
 

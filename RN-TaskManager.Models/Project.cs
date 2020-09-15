@@ -12,5 +12,8 @@ namespace RN_TaskManager.Models
         public string ProjectName { get; set; }
         public int ProjectImportance { get; set; }
 
+        public bool Deleted { get; set; }
+
+
     }
 }
