@@ -43,7 +43,14 @@ namespace RN_TaskManager.Web
 
             #endregion
 
-            services.AddControllersWithViews();
+            services.AddControllersWithViews().AddRazorRuntimeCompilation();
+
+            services.AddControllers().AddJsonOptions(options =>
+            {
+                // Use the default property (Pascal) casing.
+                options.JsonSerializerOptions.PropertyNamingPolicy = null;
+            });
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
