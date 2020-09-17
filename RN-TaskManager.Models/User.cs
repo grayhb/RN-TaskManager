@@ -30,5 +30,7 @@ namespace RN_TaskManager.Models
         /// </summary>
         public string ShortName => $"{LastName} {FirstName?[0]}.{Patronymic?[0]}.";
 
+        public string GroupName => Group == null ? "" : Group.GroupName;
+
     }
 }

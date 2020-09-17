@@ -24,8 +24,15 @@
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-text-field v-model="editedItem.GroupNumber" label="Номер группы"></v-text-field>
-                                    <v-text-field v-model="editedItem.GroupName" label="Наименование группы"></v-text-field>
+                                    <v-text-field v-model="editedItem.Login" label="Логин"></v-text-field>
+                                    <v-text-field v-model="editedItem.LastName" label="Фамилия"></v-text-field>
+                                    <v-text-field v-model="editedItem.FirstName" label="Имя"></v-text-field>
+                                    <v-text-field v-model="editedItem.Patronymic" label="Отчество"></v-text-field>
+                                    <v-select :items="groups"
+                                              item-text="GroupName"
+                                              item-value="GroupId"
+                                              v-model="editedItem.GroupId"
+                                              label="Группа"></v-select>
                                 </v-col>
                             </v-row>
                         </v-container>
@@ -86,28 +93,37 @@
 <script>
     export default {
         data: () => ({
-            title: 'Группы',
+            title: 'Пользователи',
             dialog: false,
             snackbar: false,
             errorMessage: '',
             items: [],
+            groups: [],
             headers: [
-                { text: 'Номер группы', value: 'GroupNumber' },
-                { text: 'Наименование группы', value: 'GroupName' },
+                { text: 'Логин', value: 'Login' },
+                { text: 'ФИО', value: 'ShortName' },
+                { text: 'Группа', value: 'GroupName' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
             editedItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                UserId: 0,
+                Login: '',
+                LastName: '',
+                FirstName: '',
+                Patronymic: '',
+                GroupId: -1
             },
             defaultItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                UserId: 0,
+                Login: '',
+                LastName: '',
+                FirstName: '',
+                Patronymic: '',
+                GroupId: -1
             },
-            loading: false
+            loading: false,
+            loginBlocked: false
         }),
         created() {
             this.loadItems()
@@ -150,13 +166,18 @@
                 let self = this;
                 this.loading = true;
 
-                await this.fetchData("/api/groups", (data) => {
+                await this.fetchData("/api/users", (data) => {
                     self.items = data;
+                });
+
+                await this.fetchData("/api/groups", (data) => {
+                    self.groups = data;
                 });
 
                 this.loading = false;
             },
             editItem(item) {
+                this.loginBlocked = true;
                 this.editedIndex = this.items.indexOf(item)
                 this.editedItem = Object.assign({}, item)
                 this.dialog = true
@@ -167,7 +188,7 @@
 
                 let self = this;
 
-                await fetch('/api/groups/' + item.GroupId, {
+                await fetch('/api/users/' + item.UserId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -191,6 +212,7 @@
                     });
             },
             close() {
+                this.loginBlocked = false;
                 this.dialog = false
                 this.$nextTick(() => {
                     this.editedItem = Object.assign({}, this.defaultItem)
@@ -204,15 +226,19 @@
                 let method = 'POST';
                 const formData = new FormData();
 
-                formData.append('GroupNumber', this.editedItem.GroupNumber);
-                formData.append('GroupName', this.editedItem.GroupName);
+                formData.append('Login', this.editedItem.Login);
+                formData.append('LastName', this.editedItem.LastName);
+                formData.append('FirstName', this.editedItem.FirstName);
+                formData.append('Patronymic', this.editedItem.Patronymic);
+                formData.append('GroupId', this.editedItem.GroupId);
 
+                // TODO - создание / изменение
                 if (this.editedIndex > -1) {
                     method = 'PUT';
-                    formData.append('GroupId', this.editedItem.GroupId);
-                } 
+                    formData.append('UserId', this.editedItem.UserId);
+                }
 
-                await fetch('/api/groups', {
+                await fetch('/api/users', {
                     method: method,
                     credentials: 'include',
                     body: formData
@@ -225,7 +251,7 @@
 
                             if (this.editedIndex > -1)
                                 Object.assign(self.items[this.editedIndex], item);
-                            else 
+                            else
                                 self.items.push(item);
 
                             needClose = true;

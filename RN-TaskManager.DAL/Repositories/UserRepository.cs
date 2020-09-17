@@ -1,5 +1,9 @@
-﻿using RN_TaskManager.DAL.Context;
+﻿using Microsoft.EntityFrameworkCore;
+using RN_TaskManager.DAL.Context;
 using RN_TaskManager.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RN_TaskManager.DAL.Repositories
 {
@@ -12,5 +16,12 @@ namespace RN_TaskManager.DAL.Repositories
             _context = context;
         }
 
+        public async Task<IList<User>> GetUsersAsync()
+        {
+            return await _context.Users
+                .Include(e => e.Group)
+                .Where(e => !e.Deleted)
+                .ToListAsync();
+        }
     }
 }

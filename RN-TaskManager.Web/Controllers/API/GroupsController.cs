@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Models;
@@ -21,39 +20,53 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpGet]
-        public async Task<IList<Group>> GetGroups()
+        public async Task<ActionResult<IList<Group>>> GetGroups()
         {
-            return await _groupRepository.FindAsync(e => !e.Deleted);
+            try
+            {
+                var items = await _groupRepository.FindAsync(e => !e.Deleted);
+                return items.ToList();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Group>> GetGroup(int id)
+        public async Task<ActionResult<Group>> GetItem(int id)
         {
-            var item = await _groupRepository.FindByIdAsync(id);
+            try
+            {
+                var item = await _groupRepository.FindByIdAsync(id);
 
-            if (item == null)
-                return NotFound();
-            else
-                return item;
+                if (item == null)
+                    return NotFound();
+                else
+                    return item;
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpPost]
-        public async Task<ActionResult<Group>> CreateGroup([FromForm] Group group)
+        public async Task<ActionResult<Group>> CreateItem([FromForm] Group item)
         {
-            var existItems = await _groupRepository
-                .FindAsync(e => e.GroupName.ToLower().Equals(group.GroupName.ToLower()) && !e.Deleted 
-                || e.GroupNumber.ToLower().Equals(group.GroupNumber.ToLower()) && !e.Deleted);
-
-            if (existItems.Count > 0)
-                return BadRequest("Группа с таким номером или названием уже существует");
-
-            Group item = new Group() {
-                GroupName = group.GroupName,
-                GroupNumber = group.GroupNumber
-            };
-
             try
             {
+                var existItems = await _groupRepository
+                .FindAsync(e => e.GroupName.ToLower().Equals(item.GroupName.ToLower()) && !e.Deleted
+                || e.GroupNumber.ToLower().Equals(item.GroupNumber.ToLower()) && !e.Deleted);
+
+                if (existItems.Count > 0)
+                    return BadRequest("Группа с таким номером или названием уже существует");
+
+                if (item.GroupId > 0)
+                    return BadRequest("Идентификатор записи должен быть равен 0");
+
+
                 await _groupRepository.CreateAsync(item);
                 return item;
             }
@@ -64,18 +77,19 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpPut]
-        public async Task<ActionResult<Group>> UpdateGroup([FromForm] Group group)
+        public async Task<ActionResult<Group>> UpdateItem([FromForm] Group group)
         {
-            var existItem = await _groupRepository.FindByIdAsync(group.GroupId);
-
-            if (existItem == null)
-                return NotFound();
-
-            existItem.GroupName = group.GroupName;
-            existItem.GroupNumber = group.GroupNumber;
-
             try
             {
+                var existItem = await _groupRepository.FindByIdAsync(group.GroupId);
+
+                if (existItem == null)
+                    return NotFound();
+
+                existItem.GroupName = group.GroupName;
+                existItem.GroupNumber = group.GroupNumber;
+
+
                 await _groupRepository.EditAsync(existItem);
                 return existItem;
             }
@@ -86,25 +100,25 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGroup(int id)
+        public async Task<IActionResult> DeleteItem(int id)
         {
-            var item = await _groupRepository.FindByIdAsync(id);
-
-            if (item == null)
-                return NotFound();
-            else
+            try
             {
-                item.Deleted = true;
+                var item = await _groupRepository.FindByIdAsync(id);
 
-                try
+                if (item == null)
+                    return NotFound();
+                else
                 {
+                    item.Deleted = true;
+
                     await _groupRepository.EditAsync(item);
                     return NoContent();
                 }
-                catch (Exception ex)
-                {
-                    return BadRequest(ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
     }

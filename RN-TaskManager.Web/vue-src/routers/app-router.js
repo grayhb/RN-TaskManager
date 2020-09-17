@@ -1,6 +1,7 @@
 ﻿import Router from "vue-router";
 import notFound from '../not-found.vue';
 import groups from "../components/groups";
+import users from "../components/users";
 
 Vue.use(Router);
 
@@ -9,7 +10,7 @@ export default new Router({
         //default route redirection
         {
             path: "/",
-            redirect: { name: "groups" },
+            redirect: { name: "users" },
             display: false
         },
         //not found route redirection
@@ -25,6 +26,15 @@ export default new Router({
             display: false
         },
         {
+            path: "/users",
+            name: "users",
+            component: users,
+            display: true,
+            label: "Пользователи",
+            panel: "Справочники",
+            icon: "mdi-account"
+        },
+        {
             path: "/groups",
             name: "groups",
             component: groups,
@@ -33,33 +43,7 @@ export default new Router({
             panel: "Справочники",
             icon: "mdi-account-group"
         },
-        /*
-        {
-            path: "/document-uploader",
-            name: "documentUploader",
-            component: documentUploader,
-            display: true,
-            label: "Пакетная загрузка",
-            panel: "Проекты",
-            icon: "mdi-cloud-upload"
-        },
-        {
-            path: "/sostav-editor",
-            name: "sostavEditor",
-            component: sostavEditor,
-            display: false,
-            label: "Редактор состава",
-            panel: "Проекты"
-        },
-        {
-            path: "/sostav-import",
-            name: "sostavImport",
-            component: sostavImport,
-            display: true,
-            label: "Импорт состава РД",
-            panel: "Проекты",
-            icon: "mdi-checkerboard"
-        }
-        */
+        
+       
     ]
 });
