@@ -5,8 +5,14 @@
                              :clipped="$vuetify.breakpoint.lgAndUp"
                              app>
 
+
             <v-list dense>
-                <template v-for="item in routes">
+
+                <v-divider></v-divider>
+
+                <v-subheader>Справочники</v-subheader>
+
+                <template v-for="item in routes.filter(e => e.panel === 'Справочники')">
 
                     <v-list-item :key="item.label"
                                  link

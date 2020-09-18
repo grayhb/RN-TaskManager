@@ -1,5 +1,9 @@
-﻿using RN_TaskManager.DAL.Context;
+﻿using Microsoft.EntityFrameworkCore;
+using RN_TaskManager.DAL.Context;
 using RN_TaskManager.Models;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace RN_TaskManager.DAL.Repositories
 {

@@ -123,7 +123,8 @@
                 GroupId: -1
             },
             loading: false,
-            loginBlocked: false
+            loginBlocked: false,
+            api:'/api/users'
         }),
         created() {
             this.loadItems()
@@ -166,7 +167,7 @@
                 let self = this;
                 this.loading = true;
 
-                await this.fetchData("/api/users", (data) => {
+                await this.fetchData(this.api, (data) => {
                     self.items = data;
                 });
 
@@ -188,7 +189,7 @@
 
                 let self = this;
 
-                await fetch('/api/users/' + item.UserId, {
+                await fetch(this.api + '/' + item.UserId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -238,7 +239,7 @@
                     formData.append('UserId', this.editedItem.UserId);
                 }
 
-                await fetch('/api/users', {
+                await fetch(this.api, {
                     method: method,
                     credentials: 'include',
                     body: formData

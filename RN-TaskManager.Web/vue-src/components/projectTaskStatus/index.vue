@@ -103,7 +103,8 @@
                 ProjectTaskStatusId: 0,
                 StatusName: '',
             },
-            loading: false
+            loading: false,
+            api: '/api/projectTaskStatuses'
         }),
         created() {
             this.loadItems()
@@ -146,7 +147,7 @@
                 let self = this;
                 this.loading = true;
 
-                await this.fetchData("/api/projectTaskStatuses", (data) => {
+                await this.fetchData(this.api, (data) => {
                     self.items = data;
                 });
 
@@ -163,7 +164,7 @@
 
                 let self = this;
 
-                await fetch('/api/projectTaskStatuses/' + item.ProjectTaskStatusId, {
+                await fetch(this.api + '/' + item.ProjectTaskStatusId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -207,7 +208,7 @@
                     formData.append('ProjectTaskStatusId', this.editedItem.ProjectTaskStatusId);
                 } 
 
-                await fetch('/api/projectTaskStatuses', {
+                await fetch(this.api, {
                     method: method,
                     credentials: 'include',
                     body: formData

@@ -10,21 +10,21 @@ namespace RN_TaskManager.Web.Controllers.API
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GroupsController : ControllerBase
+    public class ProjectsController : ControllerBase
     {
-        private readonly IGroupRepository _groupRepository;
+        private readonly IProjectRepository _projectRepository;
 
-        public GroupsController(IGroupRepository groupRepository)
+        public ProjectsController(IProjectRepository projectRepository)
         {
-            _groupRepository = groupRepository;
+            _projectRepository = projectRepository;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IList<Group>>> GetItems()
+        public async Task<ActionResult<IList<Project>>> GetItems()
         {
             try
             {
-                var items = await _groupRepository.FindAsync(e => !e.Deleted);
+                var items = await _projectRepository.FindAsync(e => !e.Deleted);
                 return items.ToList();
             }
             catch (Exception ex)
@@ -34,11 +34,11 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Group>> GetItem(int id)
+        public async Task<ActionResult<Project>> GetItem(int id)
         {
             try
             {
-                var item = await _groupRepository.FindByIdAsync(id);
+                var item = await _projectRepository.FindByIdAsync(id);
 
                 if (item == null)
                     return NotFound();
@@ -52,22 +52,21 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpPost]
-        public async Task<ActionResult<Group>> CreateItem([FromForm] Group item)
+        public async Task<ActionResult<Project>> CreateItem([FromForm] Project item)
         {
             try
             {
-                var existItems = await _groupRepository
-                .FindAsync(e => e.GroupName.ToLower().Equals(item.GroupName.ToLower()) && !e.Deleted
-                || e.GroupNumber.ToLower().Equals(item.GroupNumber.ToLower()) && !e.Deleted);
+                var existItems = await _projectRepository
+                .FindAsync(e => e.ProjectName.ToLower().Equals(item.ProjectName.ToLower()) && !e.Deleted);
 
                 if (existItems.Count > 0)
-                    return BadRequest("Группа с таким номером или названием уже существует");
+                    return BadRequest("Проект с таким наименованием уже существует");
 
-                if (item.GroupId > 0)
+                if (item.ProjectId > 0)
                     return BadRequest("Идентификатор записи должен быть равен 0");
 
+                await _projectRepository.CreateAsync(item);
 
-                await _groupRepository.CreateAsync(item);
                 return item;
             }
             catch (Exception ex)
@@ -77,20 +76,19 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpPut]
-        public async Task<ActionResult<Group>> UpdateItem([FromForm] Group group)
+        public async Task<ActionResult<Project>> UpdateItem([FromForm] Project group)
         {
             try
             {
-                var existItem = await _groupRepository.FindByIdAsync(group.GroupId);
+                var existItem = await _projectRepository.FindByIdAsync(group.ProjectId);
 
                 if (existItem == null)
                     return NotFound();
 
-                existItem.GroupName = group.GroupName;
-                existItem.GroupNumber = group.GroupNumber;
+                existItem.ProjectName = group.ProjectName;
+                existItem.ProjectImportance = group.ProjectImportance;
 
-
-                await _groupRepository.EditAsync(existItem);
+                await _projectRepository.EditAsync(existItem);
                 return existItem;
             }
             catch (Exception ex)
@@ -104,15 +102,16 @@ namespace RN_TaskManager.Web.Controllers.API
         {
             try
             {
-                var item = await _groupRepository.FindByIdAsync(id);
+                var item = await _projectRepository.FindByIdAsync(id);
 
                 if (item == null)
                     return NotFound();
                 else
                 {
+                    // удалить все связанные записи...
                     item.Deleted = true;
 
-                    await _groupRepository.EditAsync(item);
+                    await _projectRepository.EditAsync(item);
                     return NoContent();
                 }
             }

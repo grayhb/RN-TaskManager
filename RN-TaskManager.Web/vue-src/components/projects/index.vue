@@ -7,7 +7,7 @@
                        inset
                        vertical></v-divider>
             <v-spacer></v-spacer>
-            <v-dialog v-model="dialog" max-width="500px">
+            <v-dialog v-model="dialog" max-width="600px">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn color="primary"
                            dark
@@ -24,8 +24,24 @@
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-text-field v-model="editedItem.GroupNumber" label="Номер группы"></v-text-field>
-                                    <v-text-field v-model="editedItem.GroupName" label="Наименование группы"></v-text-field>
+                                    <v-text-field v-model="editedItem.ProjectName" label="Наименование проекта"></v-text-field>
+                                    <v-slider v-model="editedItem.ProjectImportance"
+                                              max="100"
+                                              min="1"
+                                              label="Важность"
+                                              hide-details>
+                                        <template v-slot:append>
+                                            <v-text-field v-model="editedItem.ProjectImportance"
+                                                          class="mt-0 pt-0"
+                                                          hide-details
+                                                          single-line
+                                                          type="number"
+                                                          style="width: 60px"></v-text-field>
+                                        </template>
+                                    </v-slider>
+
+                                    
+                                    <project-task-types :project-id="editedItem.ProjectId" v-if="editedItem.ProjectId > 0"></project-task-types>
                                 </v-col>
                             </v-row>
                         </v-container>
@@ -84,31 +100,34 @@
 </template>
 
 <script>
+
+    import projectTaskTypes from './project-task-types.vue';
+
     export default {
         data: () => ({
-            title: 'Группы',
+            title: 'Проекты',
             dialog: false,
             snackbar: false,
             errorMessage: '',
             items: [],
             headers: [
-                { text: 'Номер группы', value: 'GroupNumber' },
-                { text: 'Наименование группы', value: 'GroupName' },
+                { text: 'Наименование проекта', value: 'ProjectName' },
+                { text: 'Важность', value: 'ProjectImportance' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
             editedItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                ProjectId: 0,
+                ProjectName: '',
+                ProjectImportance: 1,
             },
             defaultItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                ProjectId: 0,
+                ProjectName: '',
+                ProjectImportance: 1,
             },
             loading: false,
-            api: '/api/groups'
+            api: '/api/projects'
         }),
         created() {
             this.loadItems()
@@ -168,7 +187,7 @@
 
                 let self = this;
 
-                await fetch(this.api + '/' + item.GroupId, {
+                await fetch(this.api + '/' + item.ProjectId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -205,12 +224,12 @@
                 let method = 'POST';
                 const formData = new FormData();
 
-                formData.append('GroupNumber', this.editedItem.GroupNumber);
-                formData.append('GroupName', this.editedItem.GroupName);
+                formData.append('ProjectName', this.editedItem.ProjectName);
+                formData.append('ProjectImportance', this.editedItem.ProjectImportance);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';
-                    formData.append('GroupId', this.editedItem.GroupId);
+                    formData.append('ProjectId', this.editedItem.ProjectId);
                 } 
 
                 await fetch(this.api, {
@@ -247,6 +266,9 @@
                 this.snackbar = false;
                 this.errorMessage = '';
             },
+        },
+        components: {
+            'project-task-types': projectTaskTypes
         }
     };
 </script>

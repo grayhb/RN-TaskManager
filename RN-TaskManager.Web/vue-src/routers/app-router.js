@@ -3,6 +3,7 @@ import notFound from '../not-found.vue';
 import groups from "../components/groups";
 import users from "../components/users";
 import projectTaskStatus from "../components/projectTaskStatus";
+import projects from "../components/projects";
 
 
 Vue.use(Router);
@@ -26,6 +27,15 @@ export default new Router({
             name: "not Found",
             component: notFound,
             display: false
+        },
+        {
+            path: "/projects",
+            name: "projects",
+            component: projects,
+            display: true,
+            label: "Проекты",
+            panel: "Справочники",
+            icon: "mdi-briefcase"
         },
         {
             path: "/projectTaskStatus",

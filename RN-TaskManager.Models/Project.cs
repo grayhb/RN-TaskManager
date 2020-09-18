@@ -14,6 +14,5 @@ namespace RN_TaskManager.Models
 
         public bool Deleted { get; set; }
 
-
     }
 }

@@ -1,19 +1,17 @@
 ﻿<template>
-    <div class="component-container">
+    <div class="">
+        
+        <v-divider class="mt-5 mb-3"></v-divider>
 
         <v-toolbar flat color="white">
-            <v-toolbar-title>{{title}}</v-toolbar-title>
-            <v-divider class="mx-4"
-                       inset
-                       vertical></v-divider>
-            <v-spacer></v-spacer>
             <v-dialog v-model="dialog" max-width="500px">
                 <template v-slot:activator="{ on, attrs }">
-                    <v-btn color="primary"
+                    <v-btn color="teal"
                            dark
                            class="mb-2"
                            v-bind="attrs"
-                           v-on="on">Добавить запись</v-btn>
+                           small
+                           v-on="on">Добавить тип работ</v-btn>
                 </template>
                 <v-card>
                     <v-card-title>
@@ -24,8 +22,7 @@
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-text-field v-model="editedItem.GroupNumber" label="Номер группы"></v-text-field>
-                                    <v-text-field v-model="editedItem.GroupName" label="Наименование группы"></v-text-field>
+                                    <v-text-field v-model="editedItem.ProjectTaskTypeName" label="Наименование типа работ"></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-container>
@@ -85,33 +82,35 @@
 
 <script>
     export default {
+        props: ['ProjectId'],
         data: () => ({
-            title: 'Группы',
             dialog: false,
             snackbar: false,
             errorMessage: '',
             items: [],
             headers: [
-                { text: 'Номер группы', value: 'GroupNumber' },
-                { text: 'Наименование группы', value: 'GroupName' },
+                { text: 'Наименование типа работ', value: 'ProjectTaskTypeName' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
             editedItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                ProjectTaskTypeId: 0,
+                ProjectTaskTypeName: '',
+                Order: 1,
             },
             defaultItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                ProjectTaskTypeId: 0,
+                ProjectTaskTypeName: '',
+                Order: 1,
             },
             loading: false,
-            api: '/api/groups'
+            api: '/api/projectTaskTypes'
         }),
         created() {
             this.loadItems()
+        },
+        computed: {
+            allowCreate: function () { return this.ProjectId > 0}
         },
         watch: {
             dialog(val) {
@@ -151,7 +150,7 @@
                 let self = this;
                 this.loading = true;
 
-                await this.fetchData(this.api, (data) => {
+                await this.fetchData(this.api + '/p/' + this.ProjectId, (data) => {
                     self.items = data;
                 });
 
@@ -168,7 +167,7 @@
 
                 let self = this;
 
-                await fetch(this.api + '/' + item.GroupId, {
+                await fetch(this.api + '/' + item.ProjectTaskTypeId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -205,12 +204,12 @@
                 let method = 'POST';
                 const formData = new FormData();
 
-                formData.append('GroupNumber', this.editedItem.GroupNumber);
-                formData.append('GroupName', this.editedItem.GroupName);
+                formData.append('ProjectId', this.ProjectId);
+                formData.append('ProjectTaskTypeName', this.editedItem.ProjectTaskTypeName);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';
-                    formData.append('GroupId', this.editedItem.GroupId);
+                    formData.append('ProjectTaskTypeId', this.editedItem.ProjectTaskTypeId);
                 } 
 
                 await fetch(this.api, {
