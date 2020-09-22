@@ -13,10 +13,14 @@ namespace RN_TaskManager.Web.Controllers.API
     public class ProjectsController : ControllerBase
     {
         private readonly IProjectRepository _projectRepository;
+        private readonly IProjectTaskRepository _projectTaskRepository;
+        private readonly IProjectTaskTypeRepository _projectTaskTypeRepository;
 
-        public ProjectsController(IProjectRepository projectRepository)
+        public ProjectsController(IProjectRepository projectRepository, IProjectTaskRepository projectTaskRepository, IProjectTaskTypeRepository projectTaskTypeRepository)
         {
             _projectRepository = projectRepository;
+            _projectTaskRepository = projectTaskRepository;
+            _projectTaskTypeRepository = projectTaskTypeRepository;
         }
 
         [HttpGet]
@@ -76,17 +80,17 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpPut]
-        public async Task<ActionResult<Project>> UpdateItem([FromForm] Project group)
+        public async Task<ActionResult<Project>> UpdateItem([FromForm] Project item)
         {
             try
             {
-                var existItem = await _projectRepository.FindByIdAsync(group.ProjectId);
+                var existItem = await _projectRepository.FindByIdAsync(item.ProjectId);
 
                 if (existItem == null)
                     return NotFound();
 
-                existItem.ProjectName = group.ProjectName;
-                existItem.ProjectImportance = group.ProjectImportance;
+                existItem.ProjectName = item.ProjectName;
+                existItem.ProjectImportance = item.ProjectImportance;
 
                 await _projectRepository.EditAsync(existItem);
                 return existItem;
@@ -109,9 +113,16 @@ namespace RN_TaskManager.Web.Controllers.API
                 else
                 {
                     // удалить все связанные записи...
+                    var tasks = await _projectTaskRepository.FindAsync(e => e.ProjectId.Equals(id) && !e.Deleted);
+                    foreach (var task in tasks)
+                        task.Deleted = true;
+                    
                     item.Deleted = true;
-
                     await _projectRepository.EditAsync(item);
+
+                    if (tasks.Count > 0)
+                        await _projectTaskRepository.EditAsync(tasks.ToList());
+
                     return NoContent();
                 }
             }

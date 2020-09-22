@@ -79,6 +79,7 @@ namespace RN_TaskManager.Web.Controllers.API
                     return NotFound();
 
                 existItem.StatusName = item.StatusName;
+                existItem.StatusColor = item.StatusColor;
 
                 await _projectTaskStatusRepository.EditAsync(existItem);
                 return existItem;

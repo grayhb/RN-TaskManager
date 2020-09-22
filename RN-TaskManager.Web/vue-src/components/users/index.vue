@@ -52,11 +52,13 @@
                       :loading="loading"
                       dense="true"
                       hide-default-footer="true"
+                      @click:row="e => editItem(e)"
                       items-per-page="500">
 
 
             <template v-slot:item.actions="{ item }">
-                <div class="ml-auto">
+                <div class="d-flex">
+                    <v-spacer></v-spacer>
                     <v-icon small
                             class="mr-2"
                             @click="editItem(item)">

@@ -23,5 +23,12 @@ namespace RN_TaskManager.DAL.Repositories
                 .Where(e => !e.Deleted)
                 .ToListAsync();
         }
+
+        public async Task<IList<User>> GetUsersByGroupIdAsync(int groupId)
+        {
+            return await _context.Users
+                .Where(e => !e.Deleted && e.GroupId.Equals(groupId))
+                .ToListAsync();
+        }
     }
 }

@@ -27,6 +27,13 @@
                                     <v-text-field v-model="editedItem.StatusName" label="Наименование статуса"></v-text-field>
                                 </v-col>
                             </v-row>
+                            <v-row>
+                                <v-col></v-col>
+                                <v-col>
+                                    <v-color-picker v-model="editedItem.StatusColor" hide-mode-switch></v-color-picker>
+                                </v-col>
+                                <v-col></v-col>
+                            </v-row>
                         </v-container>
                     </v-card-text>
 
@@ -44,11 +51,21 @@
                       :loading="loading"
                       dense="true"
                       hide-default-footer="true"
+                      @click:row="e => editItem(e)"
                       items-per-page="500">
+
+            <template v-slot:item.color="{ item }">
+                <v-icon small
+                        :style="{color: item.StatusColor}"
+                        >
+                    mdi-brightness-1
+                </v-icon>
+            </template>
 
 
             <template v-slot:item.actions="{ item }">
-                <div class="ml-auto">
+                <div class="d-flex">
+                    <v-spacer></v-spacer>
                     <v-icon small
                             class="mr-2"
                             @click="editItem(item)">
@@ -91,17 +108,21 @@
             errorMessage: '',
             items: [],
             headers: [
+                { text: '', value: 'color', width: '50px', sortable: false},
                 { text: 'Наименование статуса', value: 'StatusName' },
+                { text: 'Цвет', value: 'StatusColor' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
             editedItem: {
                 ProjectTaskStatusId: 0,
                 StatusName: '',
+                StatusColor: '',
             },
             defaultItem: {
                 ProjectTaskStatusId: 0,
                 StatusName: '',
+                StatusColor: '',
             },
             loading: false,
             api: '/api/projectTaskStatuses'
@@ -203,10 +224,15 @@
 
                 formData.append('StatusName', this.editedItem.StatusName);
 
+                if (typeof this.editedItem.StatusColor === 'object' && this.editedItem.StatusColor !== null)
+                    this.editedItem.StatusColor = this.editedItem.StatusColor.hex;
+
+                formData.append('StatusColor', this.editedItem.StatusColor);
+
                 if (this.editedIndex > -1) {
                     method = 'PUT';
                     formData.append('ProjectTaskStatusId', this.editedItem.ProjectTaskStatusId);
-                } 
+                }
 
                 await fetch(this.api, {
                     method: method,
@@ -221,7 +247,7 @@
 
                             if (this.editedIndex > -1)
                                 Object.assign(self.items[this.editedIndex], item);
-                            else 
+                            else
                                 self.items.push(item);
 
                             needClose = true;

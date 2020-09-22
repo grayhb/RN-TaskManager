@@ -1,3 +1,4 @@
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RN_TaskManager.DAL.Context;
 using RN_TaskManager.DAL.Repositories;
+using RN_TaskManager.Web.AutoMapperProfiles;
 
 namespace RN_TaskManager.Web
 {
@@ -40,8 +42,11 @@ namespace RN_TaskManager.Web
             services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
             services.AddScoped<IProjectTaskStatusRepository, ProjectTaskStatusRepository>();
             services.AddScoped<IProjectTaskTypeRepository, ProjectTaskTypeRepository>();
+            services.AddScoped<IProjectTaskPerformerRepository, ProjectTaskPerformerRepository>();
 
             #endregion
+
+            services.AddAutoMapper(typeof(TaskManagerAutoMapperProfile));
 
             services.AddControllersWithViews().AddRazorRuntimeCompilation();
 

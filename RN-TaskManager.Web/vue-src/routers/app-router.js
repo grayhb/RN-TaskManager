@@ -4,6 +4,7 @@ import groups from "../components/groups";
 import users from "../components/users";
 import projectTaskStatus from "../components/projectTaskStatus";
 import projects from "../components/projects";
+import projectTasks from "../components/project-tasks";
 
 
 Vue.use(Router);
@@ -13,7 +14,7 @@ export default new Router({
         //default route redirection
         {
             path: "/",
-            redirect: { name: "users" },
+            redirect: { name: "project-tasks" },
             display: false
         },
         //not found route redirection
@@ -27,6 +28,15 @@ export default new Router({
             name: "not Found",
             component: notFound,
             display: false
+        },
+        {
+            path: "/project-tasks",
+            name: "project-tasks",
+            component: projectTasks,
+            display: true,
+            label: "Задачи",
+            panel: "Задачи",
+            icon: "mdi-database"
         },
         {
             path: "/projects",

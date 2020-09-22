@@ -8,6 +8,23 @@
 
             <v-list dense>
 
+                <template v-for="item in routes.filter(e => e.panel === 'Задачи')">
+
+                    <v-list-item :key="item.label"
+                                 link
+                                 :to="item.path">
+                        <v-list-item-action>
+                            <v-icon>{{ item.icon }}</v-icon>
+                        </v-list-item-action>
+                        <v-list-item-content>
+                            <v-list-item-title>
+                                {{ item.label }}
+                            </v-list-item-title>
+                        </v-list-item-content>
+                    </v-list-item>
+
+                </template>
+
                 <v-divider></v-divider>
 
                 <v-subheader>Справочники</v-subheader>
@@ -69,6 +86,7 @@
     export default {
         created: function () {
             //this.isAdmin = isAdmin === true;
+            this.$vuetify.lang.current = 'ru';
         },
         computed: {
             routes() {

@@ -25,22 +25,7 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-text-field v-model="editedItem.ProjectName" label="Наименование проекта"></v-text-field>
-                                    <v-slider v-model="editedItem.ProjectImportance"
-                                              max="100"
-                                              min="1"
-                                              label="Важность"
-                                              hide-details>
-                                        <template v-slot:append>
-                                            <v-text-field v-model="editedItem.ProjectImportance"
-                                                          class="mt-0 pt-0"
-                                                          hide-details
-                                                          single-line
-                                                          type="number"
-                                                          style="width: 60px"></v-text-field>
-                                        </template>
-                                    </v-slider>
-
-                                    
+                                    <v-text-field v-model="editedItem.ProjectImportance" label="Важность" type="number"  :rules="[e => e >= 0 && e <= 100]"></v-text-field>
                                     <project-task-types :project-id="editedItem.ProjectId" v-if="editedItem.ProjectId > 0"></project-task-types>
                                 </v-col>
                             </v-row>
@@ -61,11 +46,13 @@
                       :loading="loading"
                       dense="true"
                       hide-default-footer="true"
+                      @click:row="e => editItem(e)"
                       items-per-page="500">
 
 
             <template v-slot:item.actions="{ item }">
-                <div class="ml-auto">
+                <div class="d-flex">
+                    <v-spacer></v-spacer>
                     <v-icon small
                             class="mr-2"
                             @click="editItem(item)">
@@ -266,6 +253,7 @@
                 this.snackbar = false;
                 this.errorMessage = '';
             },
+            projectImportanceRules: e => e >= 0 && e <= 100,
         },
         components: {
             'project-task-types': projectTaskTypes

@@ -7,5 +7,8 @@ namespace RN_TaskManager.DAL.Repositories
     public interface IUserRepository : IBaseRepository<User>
     {
         Task<IList<User>> GetUsersAsync();
+
+        Task<IList<User>> GetUsersByGroupIdAsync(int groupId);
+
     }
 }

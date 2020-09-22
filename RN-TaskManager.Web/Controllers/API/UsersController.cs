@@ -46,6 +46,14 @@ namespace RN_TaskManager.Web.Controllers.API
                 return item;
         }
 
+        [HttpGet("g/{groupId}")]
+        public async Task<ActionResult<IList<User>>> GetItemsByGroupId(int groupId)
+        {
+            var items = await _userRepository.GetUsersByGroupIdAsync(groupId);
+
+            return items.ToList();
+        }
+
         [HttpPost]
         public async Task<ActionResult<User>> CreateItem([FromForm] User item)
         {

@@ -10,6 +10,8 @@ namespace RN_TaskManager.Models
         public int ProjectTaskStatusId { get; set; }
         public string StatusName { get; set; }
 
+        public string StatusColor { get; set; }
+
         public bool Deleted { get; set; }
 
     }

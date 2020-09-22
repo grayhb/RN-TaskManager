@@ -1,21 +1,18 @@
-﻿using System;
+﻿using RN_TaskManager.Models;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace RN_TaskManager.Models
+namespace RN_TaskManager.Web.ViewModels
 {
-    [Table("ProjectTasks")]
-    public class ProjectTask
+    public class ProjectTaskViewModel
     {
-        [Key]
         public int ProjectTaskId { get; set; }
 
-        [ForeignKey("Project")]
         public int ProjectId { get; set; }
         public Project Project { get; set; }
 
-        [ForeignKey("ProjectTaskType")]
         public int? ProjectTaskTypeId { get; set; }
         public ProjectTaskType TaskType { get; set; }
 
@@ -29,19 +26,29 @@ namespace RN_TaskManager.Models
 
         public DateTime? StartFact { get; set; }
         public DateTime? EndFact { get; set; }
-        
 
-        [ForeignKey("ProjectTaskStatus")]
+
         public int? ProjectTaskStatusId { get; set; }
         public ProjectTaskStatus TaskStatus { get; set; }
 
 
-        [ForeignKey("Group")]
         public int? GroupId { get; set; }
         public Group Group { get; set; }
 
         public bool Deleted { get; set; }
 
-        public List<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
+        public string Users { get; set; }
+        public string Performers { get; set; }
+
+
+        public string ProjectName => Project != null ? Project.ProjectName : "";
+        public int ProjectImportance => Project != null ? Project.ProjectImportance : 0;
+
+
+        public string GroupName => Group != null ? Group.GroupName : "";
+
+        public string TaskTypeName => TaskType != null ? TaskType.ProjectTaskTypeName : "";
+
+        public string TaskStatusName => TaskStatus != null ? TaskStatus.StatusName : "";
     }
 }

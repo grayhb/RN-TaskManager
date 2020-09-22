@@ -1,41 +1,40 @@
 ﻿<template>
     <div class="">
-        
-        <v-divider class="mt-5 mb-3"></v-divider>
 
-        <v-toolbar flat color="white">
-            <v-dialog v-model="dialog" max-width="500px">
-                <template v-slot:activator="{ on, attrs }">
-                    <v-btn color="teal"
-                           dark
-                           class="mb-2"
-                           v-bind="attrs"
-                           small
-                           v-on="on">Добавить тип работ</v-btn>
-                </template>
-                <v-card>
-                    <v-card-title>
-                        <span class="headline">Карточка записи</span>
-                    </v-card-title>
+        <v-divider></v-divider>
 
-                    <v-card-text>
-                        <v-container>
-                            <v-row>
-                                <v-col cols="12">
-                                    <v-text-field v-model="editedItem.ProjectTaskTypeName" label="Наименование типа работ"></v-text-field>
-                                </v-col>
-                            </v-row>
-                        </v-container>
-                    </v-card-text>
+        <v-dialog v-model="dialog" max-width="500px">
+            <template v-slot:activator="{ on, attrs }">
+                <v-btn color="teal"
+                       dark
+                       class="mt-2 mb-2"
+                       v-bind="attrs"
+                       small
+                       v-on="on">Добавить тип работ</v-btn>
+            </template>
+            <v-card>
+                <v-card-title>
+                    <span class="headline">Карточка записи</span>
+                </v-card-title>
 
-                    <v-card-actions>
-                        <v-spacer></v-spacer>
-                        <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
-                        <v-btn color="blue darken-1" text @click="save">Сохранить</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-dialog>
-        </v-toolbar>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-col cols="12">
+                                <v-text-field v-model="editedItem.ProjectTaskTypeName" label="Наименование типа работ"></v-text-field>
+                            </v-col>
+                        </v-row>
+                    </v-container>
+                </v-card-text>
+
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
+                    <v-btn color="blue darken-1" text @click="save">Сохранить</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+       
 
         <v-data-table :headers="headers"
                       :items="items"
@@ -46,7 +45,8 @@
 
 
             <template v-slot:item.actions="{ item }">
-                <div class="ml-auto">
+                <div class="d-flex">
+                    <v-spacer></v-spacer>
                     <v-icon small
                             class="mr-2"
                             @click="editItem(item)">
