@@ -17,7 +17,7 @@
                               v-bind="attrs"
                               v-on="on"></v-text-field>
             </template>
-            <v-date-picker v-model="d" @input="onChangeDatePicker"></v-date-picker>
+            <v-date-picker v-model="d" @input="onChangeDatePicker" :first-day-of-week="1"></v-date-picker>
         </v-menu>
     </div>
 </template>

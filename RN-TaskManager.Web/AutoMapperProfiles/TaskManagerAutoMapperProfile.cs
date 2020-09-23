@@ -16,6 +16,7 @@ namespace RN_TaskManager.Web.AutoMapperProfiles
                 .ForMember(e => e.Users, map => map.MapFrom(projectTask => string.Join(",", projectTask.ProjectTaskPerformers.Where(e => !e.Deleted).Select(e => e.UserId))))
                 .ForMember(e => e.Performers, map => map.MapFrom(projectTask => string.Join(", ", projectTask.ProjectTaskPerformers.Where(e => !e.Deleted).Select(e => e.User.ShortName))));
 
+            CreateMap<ProjectTaskViewModel, ProjectTask>();
         }
     }
 }

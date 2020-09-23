@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient.Server;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Models;
 using RN_TaskManager.Web.Services;
@@ -131,13 +132,21 @@ namespace RN_TaskManager.Web.Controllers.API
                 newItem.TaskStatus = taskStatus;
                 newItem.TaskType = taskType;
 
+                newItem.DateCreated = DateTime.Now;
+
+                var userCreated = (await _userRepository.FindAsync(e => !e.Deleted && e.Login.ToLower().Equals(_userService.userLogin.ToLower()))).SingleOrDefault();
+                newItem.LoginCreated = userCreated != null ? userCreated.ShortName : _userService.userLogin;
+
+                newItem.ProjectTaskPerformers = new List<ProjectTaskPerformer>();
+
                 if (!string.IsNullOrEmpty(item.Users))
                 {
                     var userIds = item.Users.Split(",").Select(e => int.Parse(e)).ToList();
                     foreach (int userId in userIds)
                     {
                         var user = await _userRepository.FindByIdAsync(userId);
-                        newItem.ProjectTaskPerformers.Add(new ProjectTaskPerformer() { 
+                        newItem.ProjectTaskPerformers.Add(new ProjectTaskPerformer()
+                        {
                             Task = newItem,
                             User = user
                         });
@@ -145,26 +154,6 @@ namespace RN_TaskManager.Web.Controllers.API
                 }
 
                 await _projectTaskRepository.CreateAsync(newItem);
-
-                //// добавляем исполнителей
-                //if (!string.IsNullOrEmpty(item.Users))
-                //{
-                //    var userIds = item.Users.Split(",").Select(e => int.Parse(e)).ToList();
-
-                //    foreach (int userId in userIds)
-                //    {
-                //        var user = await _userRepository.FindByIdAsync(userId);
-                //        if (user != null)
-                //        {
-                //            var performer = new ProjectTaskPerformer()
-                //            {
-                //                Task = item,
-                //                User = user
-                //            };
-                //            await _projectTaskPerformerRepository.CreateAsync(performer);
-                //        }
-                //    }
-                //}
 
                 return _mapper.Map<ProjectTaskViewModel>(newItem);
             }
@@ -219,48 +208,49 @@ namespace RN_TaskManager.Web.Controllers.API
                 existItem.StartFact = item.StartFact;
                 existItem.EndFact = item.EndFact;
 
-                await _projectTaskRepository.EditAsync(existItem);
+                existItem.DateEdited = DateTime.Now;
 
-
-                // обновляем исполнителей
-                // удаляем старых исполнителей, если их убрали из задачи
-                var userIds = new List<int>();
+                var userEdited = (await _userRepository.FindAsync(e => !e.Deleted && e.Login.ToLower().Equals(_userService.userLogin.ToLower()))).SingleOrDefault();
+                existItem.LoginEdited = userEdited != null ? userEdited.ShortName : _userService.userLogin;
 
                 if (!string.IsNullOrEmpty(item.Users))
-                    userIds = item.Users.Split(",").Select(e => int.Parse(e)).ToList();
-
-                var existPerformers = await _projectTaskPerformerRepository.FindAsync(e => e.ProjectTaskId.Equals(existItem.ProjectTaskId) && !e.Deleted);
-                foreach (var performer in existPerformers)
                 {
-                    // пользователя нет в новых данных
-                    if (!userIds.Any(e => e == performer.UserId))
+                    if (existItem.ProjectTaskPerformers == null)
+                        existItem.ProjectTaskPerformers = new List<ProjectTaskPerformer>();
+
+                    var userIds = item.Users.Split(",").Select(e => int.Parse(e)).ToList();
+
+                    foreach (var p in existItem.ProjectTaskPerformers)
                     {
-                        performer.Deleted = true;
-                        await _projectTaskPerformerRepository.EditAsync(performer);
+                        // пользователя нет в новых данных
+                        if (!userIds.Any(e => e == p.UserId))
+                            p.Deleted = true;
                     }
-                }
 
-                // создаем новых исполнителей
-                foreach (int userId in userIds)
-                {
-                    // проверяем 
-                    if (!existPerformers.Any(e => e.UserId.Equals(userId) && !e.Deleted))
+                    foreach (int userId in userIds)
                     {
-                        var user = await _userRepository.FindByIdAsync(userId);
-                        if (user != null)
+                        // проверяем 
+                        if (!existItem.ProjectTaskPerformers.Any(e => e.UserId.Equals(userId) && !e.Deleted))
                         {
-                            var performer = new ProjectTaskPerformer()
+                            var user = await _userRepository.FindByIdAsync(userId);
+                            if (user != null)
                             {
-                                Task = existItem,
-                                User = user
-                            };
-                            await _projectTaskPerformerRepository.CreateAsync(performer);
+                                existItem.ProjectTaskPerformers.Add(new ProjectTaskPerformer()
+                                {
+                                    User = user
+                                });
+                            }
                         }
                     }
+
+                }
+                else if (existItem.ProjectTaskPerformers != null && existItem.ProjectTaskPerformers.Count > 0)
+                {
+                    foreach (var p in existItem.ProjectTaskPerformers)
+                        p.Deleted = true;
                 }
 
-                // повторно получаем актуальную запись
-                existItem = await _projectTaskRepository.ProjectTaskByIdAsync(item.ProjectTaskId);
+                await _projectTaskRepository.EditAsync(existItem);
 
                 return _mapper.Map<ProjectTaskViewModel>(existItem);
             }
@@ -282,6 +272,12 @@ namespace RN_TaskManager.Web.Controllers.API
                 else
                 {
                     item.Deleted = true;
+
+                    item.DateDeleted = DateTime.Now;
+
+                    var userDeleted = (await _userRepository.FindAsync(e => !e.Deleted && e.Login.ToLower().Equals(_userService.userLogin.ToLower()))).SingleOrDefault();
+                    item.LoginDeleted = userDeleted != null ? userDeleted.ShortName : _userService.userLogin;
+
                     await _projectTaskRepository.EditAsync(item);
 
                     // удалить всех исполнителей

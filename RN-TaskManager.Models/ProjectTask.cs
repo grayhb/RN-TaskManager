@@ -42,6 +42,15 @@ namespace RN_TaskManager.Models
 
         public bool Deleted { get; set; }
 
+
+        public DateTime? DateCreated { get; set; }
+        public DateTime? DateEdited { get; set; }
+        public DateTime? DateDeleted { get; set; }
+
+        public string LoginCreated { get; set; }
+        public string LoginEdited { get; set; }
+        public string LoginDeleted { get; set; }
+
         public List<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
     }
 }

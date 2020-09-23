@@ -35,7 +35,18 @@
                 </template>
                 <v-card>
                     <v-card-title>
-                        <span class="headline">Карточка задачи</span>
+                        <v-tooltip top>
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-icon color="blue" v-bind="attrs" v-on="on">mdi-details</v-icon>
+                            </template>
+                            <span>
+                                {{getDetailsString('Создано ', editedItem.LoginCreated, editedItem.DateCreated)}}<br />
+                                {{getDetailsString('Изменено ', editedItem.LoginEdited, editedItem.DateEdited)}}<br />
+                                {{getDetailsString('Удалено ', editedItem.LoginDeleted, editedItem.DateDeleted)}}
+                            </span>
+                        </v-tooltip>
+                        
+                        <span class="headline ml-2">Карточка задачи</span>
                     </v-card-title>
 
                     <v-card-text>
@@ -63,6 +74,7 @@
                                               item-value="ProjectTaskTypeId"
                                               v-model="editedItem.ProjectTaskTypeId"
                                               :rules="[e => e > 0]"
+                                              :loading="loadings.taskTypes"
                                               dense
                                               label="Тип задачи"></v-select>
                                 </v-col>
@@ -156,11 +168,26 @@
 
         <v-data-table :headers="headers"
                       :items="tasks"
-                      :loading="loading"
+                      :loading="loadings.users || loadings.firstLoad"
                       dense="true"
                       hide-default-footer="true"
                       @click:row="onRowClick"
                       items-per-page="500">
+
+            <template v-slot:item.TaskTypeName="{ item }">
+                <span>
+                    <v-tooltip top>
+                        <template v-slot:activator="{ on, attrs }">
+                            <b 
+                                v-bind="attrs"
+                                v-on="on">
+                                {{abbreviation(item.TaskTypeName)}}
+                            </b>
+                        </template>
+                        <span>{{item.TaskTypeName}}</span>
+                    </v-tooltip>
+                </span>
+            </template>
 
             <template v-slot:item.StartPlan="{ item }">
                 <span>{{localeFormat(item.StartPlan)}}</span>
@@ -233,9 +260,9 @@
             users: [],
             headers: [
                 { text: '', value: 'TaskStatusName', width: '50px', sortable: false },
+                { text: '', value: 'TaskTypeName', width: '50px' },
 
                 { text: 'Проект', value: 'ProjectName' },
-                { text: 'Тип задачи', value: 'TaskTypeName' },
                 { text: 'Описание работы', value: 'Details' },
 
                 { text: 'Начало план', value: 'StartPlan', width: '145px' },
@@ -263,6 +290,12 @@
                 DurationHours: 0,
                 Priority: 0,
                 Users: [],
+                //DateCreated: null,
+                //DateEdited: null,
+                //DateDeleted: null,
+                //LoginCreated: null,
+                //LoginEdited: null,
+                //LoginDeleted: null,
             },
             defaultItem: {
                 ProjectTaskId: 0,
@@ -279,7 +312,12 @@
                 Priority: 0,
                 Users: [],
             },
-            loading: false,
+            loadings: {
+                firstLoad: false,
+                items: false,
+                performers: false,
+                taskTypes: false,
+            },
             myTask: true,
             search: '',
             api: '/api/projectTasks'
@@ -327,7 +365,7 @@
             },
             async loadTasks() {
                 let self = this;
-                this.loading = true;
+                this.loadings.users = true;
 
                 let uri = this.api;
 
@@ -339,9 +377,11 @@
                     self.items = data;
                 });
 
-                this.loading = false;
+                this.loadings.users = false;
             },
             async loadItems() {
+
+                this.loadings.firstLoad = true;
 
                 let self = this;
 
@@ -362,22 +402,31 @@
                 this.fetchData('/api/users', (data) => {
                     self.users = data;
                 });
+
+                this.loadings.firstLoad = false;
             },
             loadTaskTypes(projectId) {
+
+                this.loadings.taskTypes = true;
+
                 let self = this;
 
                 this.fetchData('/api/projectTaskTypes/p/' + projectId, (data) => {
                     self.taskTypes = data;
+                    self.loadings.taskTypes = false;
                 });
             },
-            loadPerformers(projectTaskId) {
+            async loadPerformers(projectTaskId) {
                 let self = this;
 
-                self.editedItem.Users = [];
+                this.editedItem.Users = [];
+                this.loadings.performers = true;
 
-                this.fetchData('/api/projectTaskPerformers/task/' + projectTaskId, (data) => {
+                await this.fetchData('/api/projectTaskPerformers/task/' + projectTaskId, (data) => {
                     self.editedItem.Users = data.map(e => e.UserId);
+                    self.loadings.performers = false;
                 });
+
             },
             editItem(item) {
                 this.editedIndex = this.items.indexOf(item);
@@ -386,10 +435,8 @@
                 if (this.editedItem.ProjectId > 0 && this.editedItem.ProjectTaskTypeId > 0) {
                     this.loadTaskTypes(this.editedItem.ProjectId);
                 }
-                console.log(this.editedItem.ProjectTaskId);
 
                 if (this.editedItem.ProjectTaskId > 0) {
-                    console.log('пытаеся загрузить исполнителей');
                     this.loadPerformers(this.editedItem.ProjectTaskId);
                 }
 
@@ -502,6 +549,17 @@
                     return '';
 
                 return new Date(Date.parse(v)).toISOString();
+            },
+            abbreviation(t) {
+                return t.split(' ').map(e => e[0]).join('').toUpperCase();
+            },
+            getDetailsString(label, login, dateChanged) {
+
+                if (login !== null)
+                    return label + this.localeFormat(dateChanged) + ' (' + login + ')';
+                else
+                    return label + ' - нет информации';
+
             },
             localeFormat(d) {
 
