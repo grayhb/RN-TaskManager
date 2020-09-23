@@ -12,6 +12,7 @@
                               prepend-icon="mdi-calendar-today"
                               readonly
                               clearable
+                              dense
                               @click:clear="onClear"
                               v-bind="attrs"
                               v-on="on"></v-text-field>

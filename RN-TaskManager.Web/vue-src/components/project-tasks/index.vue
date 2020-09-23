@@ -3,9 +3,27 @@
 
         <v-toolbar flat color="white">
             <v-toolbar-title>{{title}}</v-toolbar-title>
+
             <v-divider class="mx-4"
                        inset
                        vertical></v-divider>
+
+                <v-btn @click="onChangeMyTask" class="mb-2 mr-2">
+                    <v-icon small
+                            :color="myTask ? 'green' : 'grey'"
+                            class="mr-2">
+                        mdi-brightness-1
+                    </v-icon>
+                    Мои задачи
+                </v-btn>
+
+                <v-text-field v-model="search"
+                              class="mt-4"
+                              label="Поиск"
+                              outlined
+                              dense
+                              clearable></v-text-field>
+
             <v-spacer></v-spacer>
             <v-dialog v-model="dialog" max-width="800px">
                 <template v-slot:activator="{ on, attrs }">
@@ -66,15 +84,18 @@
                                               item-value="GroupId"
                                               v-model="editedItem.GroupId"
                                               :rules="[e => e > 0]"
+                                              dense
                                               label="Группа"></v-select>
                                 </v-col>
 
                                 <v-col>
                                     <v-select v-model="editedItem.Users"
-                                              :items="users"
+                                              :items="users.filter(e => e.GroupId === editedItem.GroupId)"
                                               item-text="ShortName"
                                               item-value="UserId"
                                               attach
+                                              dense
+                                              single-line
                                               label="Исполнители"
                                               multiple></v-select>
                                 </v-col>
@@ -87,12 +108,13 @@
                                 <v-col>
                                     <datePicker v-model="editedItem.EndPlan" label="Плановое окончание"></datePicker>
                                 </v-col>
-                                <v-col cols="2">
+                                <v-col cols="1">
                                 </v-col>
-                                <v-col>
+                                <v-col cols="3">
                                     <v-text-field v-model="editedItem.Priority"
                                                   label="Приоритет"
                                                   type="number"
+                                                  dense
                                                   :rules="[e => e >= 0 ]">
                                     </v-text-field>
                                 </v-col>
@@ -105,12 +127,13 @@
                                 <v-col>
                                     <datePicker v-model="editedItem.EndFact" label="Фактическое окончание"></datePicker>
                                 </v-col>
-                                <v-col cols="2">
+                                <v-col cols="1">
                                 </v-col>
-                                <v-col>
+                                <v-col cols="3">
                                     <v-text-field v-model="editedItem.DurationHours"
                                                   label="Трудозатраты чел/час"
                                                   type="number"
+                                                  dense
                                                   :rules="[e => e >= 0 ]">
 
                                     </v-text-field>
@@ -132,7 +155,7 @@
         </v-toolbar>
 
         <v-data-table :headers="headers"
-                      :items="items"
+                      :items="tasks"
                       :loading="loading"
                       dense="true"
                       hide-default-footer="true"
@@ -157,7 +180,6 @@
 
 
             <template v-slot:item.TaskStatusName="{ item }">
-                <!-- yellow red green -->
                 <div>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
@@ -258,6 +280,8 @@
                 Users: [],
             },
             loading: false,
+            myTask: true,
+            search: '',
             api: '/api/projectTasks'
         }),
         created() {
@@ -267,6 +291,11 @@
             dialog(val) {
                 val || this.close()
             },
+        },
+        computed: {
+            tasks() {
+                return this.items.filter(e => this.searchItem(e));
+            }
         },
         methods: {
             fetchData(uri, callback) {
@@ -296,14 +325,27 @@
                         self.snackbar = true;
                     });
             },
-            async loadItems() {
-
+            async loadTasks() {
                 let self = this;
                 this.loading = true;
 
-                await this.fetchData(this.api, (data) => {
+                let uri = this.api;
+
+                if (this.myTask) {
+                    uri += '/my';
+                }
+
+                await this.fetchData(uri, (data) => {
                     self.items = data;
                 });
+
+                this.loading = false;
+            },
+            async loadItems() {
+
+                let self = this;
+
+                await this.loadTasks();
 
                 await this.fetchData('/api/projects', (data) => {
                     self.projects = data;
@@ -320,8 +362,6 @@
                 this.fetchData('/api/users', (data) => {
                     self.users = data;
                 });
-
-                this.loading = false;
             },
             loadTaskTypes(projectId) {
                 let self = this;
@@ -401,8 +441,6 @@
                 let method = 'POST';
                 const formData = new FormData();
 
-                console.log(this.editedItem);
-
                 formData.append('ProjectId', this.editedItem.ProjectId);
                 formData.append('ProjectTaskStatusId', this.editedItem.ProjectTaskStatusId);
                 formData.append('ProjectTaskTypeId', this.editedItem.ProjectTaskTypeId);
@@ -472,8 +510,25 @@
 
                 return new Date(Date.parse(d)).toLocaleDateString();
             },
+            searchItem(e) {
+
+                if (this.search === null || this.search === '')
+                    return true;
+
+                if (e.Details.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
+                    return true;
+
+                if (e.ProjectName.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
+                    return true;
+
+                return false;
+            },
             onRowClick(e) {
                 this.editItem(e);
+            },
+            onChangeMyTask() {
+                this.myTask = !this.myTask;
+                this.loadTasks();
             }
         },
         components: {

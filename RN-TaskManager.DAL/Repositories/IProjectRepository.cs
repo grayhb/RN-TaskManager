@@ -6,5 +6,7 @@ namespace RN_TaskManager.DAL.Repositories
 {
     public interface IProjectRepository : IBaseRepository<Project>
     {
+        Task<List<Project>> GetProjectsAsync();
+        Task<Project> GetProjectByIdAsync(int id);
     }
 }

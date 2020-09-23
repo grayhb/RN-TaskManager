@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Models;
+using RN_TaskManager.Web.Services;
 using RN_TaskManager.Web.ViewModels;
 
 namespace RN_TaskManager.Web.Controllers.API
@@ -22,6 +23,7 @@ namespace RN_TaskManager.Web.Controllers.API
         private readonly IProjectTaskPerformerRepository _projectTaskPerformerRepository;
         private readonly IGroupRepository _groupRepository;
         private readonly IUserRepository _userRepository;
+        private readonly IUserService _userService;
 
         public ProjectTasksController(
             IMapper mapper,
@@ -31,7 +33,8 @@ namespace RN_TaskManager.Web.Controllers.API
             IProjectTaskStatusRepository projectTaskStatusRepository,
             IProjectTaskPerformerRepository projectTaskPerformerRepository,
             IGroupRepository groupRepository,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IUserService userService)
         {
             _mapper = mapper;
             _projectTaskRepository = projectTaskRepository;
@@ -41,6 +44,7 @@ namespace RN_TaskManager.Web.Controllers.API
             _projectTaskPerformerRepository = projectTaskPerformerRepository;
             _groupRepository = groupRepository;
             _userRepository = userRepository;
+            _userService = userService;
         }
 
         [HttpGet]
@@ -49,6 +53,22 @@ namespace RN_TaskManager.Web.Controllers.API
             try
             {
                 var items = await _projectTaskRepository.ProjectTasksAsync();
+
+                return items.Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("my")]
+        public async Task<ActionResult<List<ProjectTaskViewModel>>> GetUserTasks()
+        {
+            try
+            {
+                var user = _userRepository.FindAsync(e => e.Login.Equals(_userService.userLogin)).Result.FirstOrDefault();
+                var items = await _projectTaskRepository.ProjectTasksByUserIdAsync(user.UserId);
 
                 return items.Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
             }

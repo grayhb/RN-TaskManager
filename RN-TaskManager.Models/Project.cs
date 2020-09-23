@@ -12,7 +12,13 @@ namespace RN_TaskManager.Models
         public string ProjectName { get; set; }
         public int ProjectImportance { get; set; }
 
+        public int? UserId { get; set; }
+        public User Responsible { get; set; }
+
         public bool Deleted { get; set; }
+
+        public string ResponsibleName => Responsible == null ? "" : Responsible.ShortName;
+
 
     }
 }

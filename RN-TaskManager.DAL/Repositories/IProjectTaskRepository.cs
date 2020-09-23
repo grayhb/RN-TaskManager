@@ -8,5 +8,6 @@ namespace RN_TaskManager.DAL.Repositories
     {
         Task<ProjectTask> ProjectTaskByIdAsync(int id);
         Task<List<ProjectTask>> ProjectTasksAsync();
+        Task<List<ProjectTask>> ProjectTasksByUserIdAsync(int userId);
     }
 }

@@ -14,13 +14,14 @@ namespace RN_TaskManager.Web.Controllers.API
     {
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectTaskRepository _projectTaskRepository;
-        private readonly IProjectTaskTypeRepository _projectTaskTypeRepository;
+        private readonly IUserRepository _userRepository;
 
-        public ProjectsController(IProjectRepository projectRepository, IProjectTaskRepository projectTaskRepository, IProjectTaskTypeRepository projectTaskTypeRepository)
+
+        public ProjectsController(IProjectRepository projectRepository, IProjectTaskRepository projectTaskRepository, IUserRepository userRepository)
         {
             _projectRepository = projectRepository;
             _projectTaskRepository = projectTaskRepository;
-            _projectTaskTypeRepository = projectTaskTypeRepository;
+            _userRepository = userRepository;
         }
 
         [HttpGet]
@@ -28,7 +29,7 @@ namespace RN_TaskManager.Web.Controllers.API
         {
             try
             {
-                var items = await _projectRepository.FindAsync(e => !e.Deleted);
+                var items = await _projectRepository.GetProjectsAsync();
                 return items.ToList();
             }
             catch (Exception ex)
@@ -42,7 +43,7 @@ namespace RN_TaskManager.Web.Controllers.API
         {
             try
             {
-                var item = await _projectRepository.FindByIdAsync(id);
+                var item = await _projectRepository.GetProjectByIdAsync(id);
 
                 if (item == null)
                     return NotFound();
@@ -69,6 +70,9 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (item.ProjectId > 0)
                     return BadRequest("Идентификатор записи должен быть равен 0");
 
+                if (item.UserId > 0)
+                    item.Responsible = await _userRepository.FindByIdAsync(item.UserId.Value);
+
                 await _projectRepository.CreateAsync(item);
 
                 return item;
@@ -89,10 +93,17 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (existItem == null)
                     return NotFound();
 
+                if (item.UserId > 0)
+                {
+                    existItem.Responsible = await _userRepository.FindByIdAsync(item.UserId.Value);
+                    existItem.UserId = item.UserId;
+                }
+
                 existItem.ProjectName = item.ProjectName;
                 existItem.ProjectImportance = item.ProjectImportance;
 
                 await _projectRepository.EditAsync(existItem);
+
                 return existItem;
             }
             catch (Exception ex)

@@ -25,7 +25,13 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-text-field v-model="editedItem.ProjectName" label="Наименование проекта"></v-text-field>
-                                    <v-text-field v-model="editedItem.ProjectImportance" label="Важность" type="number"  :rules="[e => e >= 0 && e <= 100]"></v-text-field>
+                                    <v-text-field v-model="editedItem.ProjectImportance" label="Важность" type="number" :rules="[e => e >= 0 && e <= 100]"></v-text-field>
+                                    <v-select :items="users"
+                                              item-text="ShortName"
+                                              item-value="UserId"
+                                              v-model="editedItem.UserId"
+                                              :rules="[e => e > 0]"
+                                              label="Ответственный"></v-select>
                                     <project-task-types :project-id="editedItem.ProjectId" v-if="editedItem.ProjectId > 0"></project-task-types>
                                 </v-col>
                             </v-row>
@@ -97,9 +103,11 @@
             snackbar: false,
             errorMessage: '',
             items: [],
+            users: [],
             headers: [
                 { text: 'Наименование проекта', value: 'ProjectName' },
                 { text: 'Важность', value: 'ProjectImportance' },
+                { text: 'Ответственный', value: 'ResponsibleName' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
@@ -107,11 +115,13 @@
                 ProjectId: 0,
                 ProjectName: '',
                 ProjectImportance: 1,
+                UserId: 0,
             },
             defaultItem: {
                 ProjectId: 0,
                 ProjectName: '',
                 ProjectImportance: 1,
+                UserId: 0,
             },
             loading: false,
             api: '/api/projects'
@@ -159,6 +169,10 @@
 
                 await this.fetchData(this.api, (data) => {
                     self.items = data;
+                });
+
+                await this.fetchData('/api/users', (data) => {
+                    self.users = data;
                 });
 
                 this.loading = false;
@@ -213,6 +227,7 @@
 
                 formData.append('ProjectName', this.editedItem.ProjectName);
                 formData.append('ProjectImportance', this.editedItem.ProjectImportance);
+                formData.append('UserId', this.editedItem.UserId);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';

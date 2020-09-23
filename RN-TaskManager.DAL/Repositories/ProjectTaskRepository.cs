@@ -40,5 +40,19 @@ namespace RN_TaskManager.DAL.Repositories
                 .ThenInclude(e => e.User)
                 .ToListAsync();
         }
+
+        public async Task<List<ProjectTask>> ProjectTasksByUserIdAsync(int userId)
+        {
+            return await _context.ProjectTasks
+                .Where(e => e.ProjectTaskPerformers.Any(ptp => !ptp.Deleted && ptp.UserId.Equals(userId)) 
+                    && !e.Deleted && !e.Project.Deleted && !e.Group.Deleted && !e.TaskStatus.Deleted && !e.TaskStatus.Deleted)
+                .Include(e => e.Project)
+                .Include(e => e.TaskStatus)
+                .Include(e => e.Group)
+                .Include(e => e.TaskType)
+                .Include(e => e.ProjectTaskPerformers)
+                .ThenInclude(e => e.User)
+                .ToListAsync();
+        }
     }
 }
