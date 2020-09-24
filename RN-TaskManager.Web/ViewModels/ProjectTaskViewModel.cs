@@ -17,6 +17,7 @@ namespace RN_TaskManager.Web.ViewModels
         public ProjectTaskType TaskType { get; set; }
 
         public string Details { get; set; }
+        public string Note { get; set; }
 
         public int Priority { get; set; }
         public int DurationHours { get; set; }

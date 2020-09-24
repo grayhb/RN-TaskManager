@@ -198,6 +198,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 existItem.TaskType = taskType;
 
                 existItem.Details = item.Details;
+                existItem.Note = item.Note;
                 existItem.Priority = item.Priority;
                 existItem.DurationHours = item.DurationHours;
 

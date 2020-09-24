@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RN_TaskManager.DAL.Context;
 
 namespace RN_TaskManager.DAL.Migrations
 {
     [DbContext(typeof(RN_TaskManagerContext))]
-    partial class RN_TaskManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20200924101708_AddNoteInProjectTask")]
+    partial class AddNoteInProjectTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

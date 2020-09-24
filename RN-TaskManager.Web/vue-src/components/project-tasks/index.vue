@@ -78,6 +78,7 @@
                                               v-model="editedItem.ProjectTaskTypeId"
                                               :rules="[e => e > 0]"
                                               :loading="loadings.taskTypes"
+                                              :disabled="loadings.taskTypes"
                                               dense
                                               label="Тип задачи"></v-select>
                                 </v-col>
@@ -150,8 +151,13 @@
                                                   type="number"
                                                   dense
                                                   :rules="[e => e >= 0 ]">
-
                                     </v-text-field>
+                                </v-col>
+                            </v-row>
+
+                            <v-row>
+                                <v-col>
+                                    <v-textarea label="Примечание" v-model="editedItem.Note" rows="2" dense></v-textarea>
                                 </v-col>
                             </v-row>
 
@@ -249,7 +255,8 @@
 
         <v-divider></v-divider>
 
-        <v-data-table :headers="headers"
+        <v-data-table class="table-tasks"
+                      :headers="headers"
                       :items="tasks"
                       :loading="loadings.users || loadings.firstLoad"
                       dense="true"
@@ -342,7 +349,7 @@
             taskTypes: [],
             users: [],
             headers: [
-                { text: '', value: 'TaskStatusName', width: '50px', sortable: false },
+                { text: '', value: 'TaskStatusName', width: '30px', sortable: false },
                 { text: '', value: 'TaskTypeName', width: '40px' },
 
                 { text: 'Проект', value: 'ProjectName', filterable: true },
@@ -366,6 +373,7 @@
                 ProjectTaskTypeId: 0,
                 GroupId: 0,
                 Details: '',
+                Note: '',
                 StartPlan: new Date().toISOString().substr(0, 10),
                 EndPlan: '',
                 StartFact: '',
@@ -381,6 +389,7 @@
                 ProjectTaskTypeId: 0,
                 GroupId: 0,
                 Details: '',
+                Note: '',
                 StartPlan: new Date(Date.now()).toISOString(),
                 EndPlan: '',
                 StartFact: '',
@@ -660,6 +669,7 @@
                 formData.append('EndFact', this.toISOString(this.editedItem.EndFact));
 
                 formData.append('Details', this.editedItem.Details);
+                formData.append('Note', this.editedItem.Note);
                 formData.append('DurationHours', this.editedItem.DurationHours);
                 formData.append('Priority', this.editedItem.Priority);
 
@@ -803,5 +813,9 @@
 
     .toolbar-filters .v-input {
         height: 48px;
+    }
+
+    .table-tasks .v-data-table-header th {
+        padding: 0 10px !important;
     }
 </style>
