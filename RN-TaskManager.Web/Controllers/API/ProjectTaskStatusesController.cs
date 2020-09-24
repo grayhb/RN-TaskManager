@@ -25,7 +25,7 @@ namespace RN_TaskManager.Web.Controllers.API
             try
             {
                 var items = await _projectTaskStatusRepository.FindAsync(e => !e.Deleted);
-                return items.ToList();
+                return items.OrderBy(e => e.Order).ToList();
             }
             catch (Exception ex)
             {
@@ -80,6 +80,7 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 existItem.StatusName = item.StatusName;
                 existItem.StatusColor = item.StatusColor;
+                existItem.Order = item.Order;
 
                 await _projectTaskStatusRepository.EditAsync(existItem);
                 return existItem;

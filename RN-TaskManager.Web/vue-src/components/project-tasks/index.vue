@@ -8,28 +8,31 @@
                        inset
                        vertical></v-divider>
 
-                <v-btn @click="onChangeMyTask" class="mb-2 mr-2">
-                    <v-icon small
-                            :color="myTask ? 'green' : 'grey'"
-                            class="mr-2">
-                        mdi-brightness-1
-                    </v-icon>
-                    Мои задачи
-                </v-btn>
+            <v-btn @click="onChangeMyTask" class="mr-2">
+                <v-icon small
+                        :color="filters.myTask ? 'green' : 'grey'"
+                        class="mr-2">
+                    mdi-brightness-1
+                </v-icon>
+                Мои задачи
+            </v-btn>
 
-                <v-text-field v-model="search"
-                              class="mt-4"
-                              label="Поиск"
-                              outlined
-                              dense
-                              clearable></v-text-field>
+            <v-btn @click="onChangeFilterWeek" class="mr-2">
+                <v-icon small
+                        :color="filters.week ? 'green' : 'grey'"
+                        class="mr-2">
+                    mdi-brightness-1
+                </v-icon>
+                На неделю
+            </v-btn>
 
             <v-spacer></v-spacer>
+
             <v-dialog v-model="dialog" max-width="800px">
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn color="primary"
                            dark
-                           class="mb-2"
+                           class=""
                            v-bind="attrs"
                            v-on="on">Добавить запись</v-btn>
                 </template>
@@ -45,7 +48,7 @@
                                 {{getDetailsString('Удалено ', editedItem.LoginDeleted, editedItem.DateDeleted)}}
                             </span>
                         </v-tooltip>
-                        
+
                         <span class="headline ml-2">Карточка задачи</span>
                     </v-card-title>
 
@@ -160,11 +163,91 @@
 
                         <v-spacer></v-spacer>
                         <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
-                        <v-btn color="blue darken-1" text @click="save">Сохранить</v-btn>
+                        <v-btn color="blue darken-1"
+                               text @click="save"
+                               :loading="loadings.save"
+                               :disabled="loadings.save">Сохранить</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
         </v-toolbar>
+
+        <v-divider></v-divider>
+
+        <div class="d-flex mt-2 toolbar-filters">
+
+            <v-text-field v-model="search"
+                          class=""
+                          style="max-width: 15rem;"
+                          label="Поиск"
+                          outlined
+                          dense
+                          clearable></v-text-field>
+
+            <v-select v-model="filters.status"
+                      class="ml-2"
+                      style="max-width: 12rem;"
+                      :items="statuses"
+                      item-text="StatusName"
+                      item-value="ProjectTaskStatusId"
+                      label="Статус"
+                      outlined
+                      dense
+                      multiple>
+                <template v-slot:selection="{ item, index }">
+                    <span class="grey--text caption" v-if="index === 0">Выбрано {{ filters.status.length }}</span>
+                </template>
+            </v-select>
+
+            <v-select v-model="filters.projects"
+                      class="ml-2"
+                      style="max-width: 15rem;"
+                      :items="projects"
+                      item-text="ProjectName"
+                      item-value="ProjectId"
+                      label="Проект"
+                      outlined
+                      dense
+                      multiple>
+                <template v-slot:selection="{ item, index }">
+                    <span class="grey--text caption" v-if="index === 0">Выбрано {{ filters.projects.length }}</span>
+                </template>
+            </v-select>
+
+            <v-select v-model="filters.groups"
+                      class="ml-2"
+                      style="max-width: 10rem;"
+                      :items="groups"
+                      item-text="GroupName"
+                      item-value="GroupId"
+                      label="Группа"
+                      outlined
+                      dense
+                      multiple>
+                <template v-slot:selection="{ item, index }">
+                    <span class="grey--text caption" v-if="index === 0">Выбрано {{ filters.groups.length }}</span>
+                </template>
+            </v-select>
+
+            <v-select v-model="filters.performers"
+                      class="ml-2"
+                      style="max-width: 15rem;"
+                      :items="users"
+                      item-text="ShortName"
+                      item-value="UserId"
+                      label="Исполнитель"
+                      outlined
+                      dense
+                      multiple>
+                <template v-slot:selection="{ item, index }">
+                    <span class="grey--text caption" v-if="index === 0">Выбрано {{ filters.performers.length }}</span>
+                </template>
+            </v-select>
+
+
+        </div>
+
+        <v-divider></v-divider>
 
         <v-data-table :headers="headers"
                       :items="tasks"
@@ -172,15 +255,15 @@
                       dense="true"
                       hide-default-footer="true"
                       @click:row="onRowClick"
+                      :custom-sort="customSort"
                       items-per-page="500">
 
             <template v-slot:item.TaskTypeName="{ item }">
                 <span>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <b 
-                                v-bind="attrs"
-                                v-on="on">
+                            <b v-bind="attrs"
+                               v-on="on">
                                 {{abbreviation(item.TaskTypeName)}}
                             </b>
                         </template>
@@ -260,9 +343,9 @@
             users: [],
             headers: [
                 { text: '', value: 'TaskStatusName', width: '50px', sortable: false },
-                { text: '', value: 'TaskTypeName', width: '50px' },
+                { text: '', value: 'TaskTypeName', width: '40px' },
 
-                { text: 'Проект', value: 'ProjectName' },
+                { text: 'Проект', value: 'ProjectName', filterable: true },
                 { text: 'Описание работы', value: 'Details' },
 
                 { text: 'Начало план', value: 'StartPlan', width: '145px' },
@@ -290,12 +373,6 @@
                 DurationHours: 0,
                 Priority: 0,
                 Users: [],
-                //DateCreated: null,
-                //DateEdited: null,
-                //DateDeleted: null,
-                //LoginCreated: null,
-                //LoginEdited: null,
-                //LoginDeleted: null,
             },
             defaultItem: {
                 ProjectTaskId: 0,
@@ -317,8 +394,16 @@
                 items: false,
                 performers: false,
                 taskTypes: false,
+                save: false,
             },
-            myTask: true,
+            filters: {
+                status: [],
+                performers: [],
+                projects: [],
+                groups: [],
+                myTask: true,
+                week: false
+            },
             search: '',
             api: '/api/projectTasks'
         }),
@@ -332,7 +417,79 @@
         },
         computed: {
             tasks() {
-                return this.items.filter(e => this.searchItem(e));
+
+                let items = this.items;
+
+                // фильтр за неделю....
+                if (this.filters.week) {
+
+                    let currentDate = new Date;
+                    var first = currentDate.getDate() - currentDate.getDay() + 1;
+                    var last = first + 6;
+
+                    var firstday = new Date(currentDate.setDate(first));
+                    var lastday = new Date(currentDate.setDate(last));
+
+                    items = items.filter(e => {
+
+                        let pass = false;
+                        let dStart = null;
+                        let dEnd = null;
+
+                        if (e.StartPlan !== null) {
+                            dStart = new Date(e.StartPlan);
+
+                            if (e.StartFact !== null)
+                                dStart = new Date(e.StartPlan);
+                        }
+
+                        if (e.EndPlan !== null) {
+                            dEnd = new Date(e.EndPlan);
+
+                            if (e.EndFact !== null)
+                                dEnd = new Date(e.EndFact);
+                        }
+
+                        if (dStart !== null && dEnd !== null)
+                            pass = (dStart <= firstday && dEnd >= firstday) || (dStart >= firstday && dStart <= lastday) ;
+
+                        return pass;
+                    });
+                }
+
+                // фильтр по статусу
+                if (this.filters.status.length > 0)
+                    items = items.filter(e => this.filters.status.indexOf(e.ProjectTaskStatusId) > -1);
+
+                // фильтр по проекту
+                if (this.filters.projects.length > 0)
+                    items = items.filter(e => this.filters.projects.indexOf(e.ProjectId) > -1);
+
+                // фильтр по группе
+                if (this.filters.groups.length > 0)
+                    items = items.filter(e => this.filters.groups.indexOf(e.GroupId) > -1);
+
+                // фильтр по исполнителю
+                if (this.filters.performers.length > 0)
+                    items = items.filter(e => {
+
+                        let users = e.Users.split(',');
+                        let pass = false;
+
+                        for (let user of users) {
+                            if (this.filters.performers.indexOf(Number.parseInt(user)) > -1) {
+                                pass = true;
+                                break;
+                            }
+                        }
+
+                        return pass;
+                    });
+
+                // поиск
+                items = items.filter(e => this.searchItem(e));
+
+                return items;
             }
         },
         methods: {
@@ -369,23 +526,21 @@
 
                 let uri = this.api;
 
-                if (this.myTask) {
+                if (this.filters.myTask) {
                     uri += '/my';
                 }
 
                 await this.fetchData(uri, (data) => {
                     self.items = data;
+                    self.loadings.users = false;
                 });
 
-                this.loadings.users = false;
             },
             async loadItems() {
 
                 this.loadings.firstLoad = true;
 
                 let self = this;
-
-                await this.loadTasks();
 
                 await this.fetchData('/api/projects', (data) => {
                     self.projects = data;
@@ -397,11 +552,14 @@
 
                 await this.fetchData('/api/projectTaskStatuses', (data) => {
                     self.statuses = data;
+                    self.filters.status = [self.statuses[0].ProjectTaskStatusId];
                 });
 
-                this.fetchData('/api/users', (data) => {
+                await this.fetchData('/api/users', (data) => {
                     self.users = data;
                 });
+
+                await this.loadTasks();
 
                 this.loadings.firstLoad = false;
             },
@@ -483,6 +641,8 @@
             },
             async save() {
 
+                this.loadings.save = true;
+
                 let self = this;
                 let needClose = false;
                 let method = 'POST';
@@ -507,7 +667,7 @@
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';
-                    formData.append('ProjectTaskId', this.editedItem.ProjectTaskStatusId);
+                    formData.append('ProjectTaskId', this.editedItem.ProjectTaskId);
                 }
 
                 await fetch(this.api, {
@@ -516,6 +676,8 @@
                     body: formData
                 })
                     .then(async (response) => {
+
+                        self.loadings.save = false;
 
                         if (response.ok) {
 
@@ -568,6 +730,13 @@
 
                 return new Date(Date.parse(d)).toLocaleDateString();
             },
+            sortFormat(d) {
+
+                if (d === undefined || d === null || d === '')
+                    return '';
+
+                return new Date(Date.parse(d)).toISOString().split('T')[0];
+            },
             searchItem(e) {
 
                 if (this.search === null || this.search === '')
@@ -579,14 +748,46 @@
                 if (e.ProjectName.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
                     return true;
 
+                if (e.Performers.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
+                    return true;
+
+                if (e.Group.GroupName.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
+                    return true;
+
                 return false;
+            },
+            customSort(items, index, isDesc) {
+
+                if (index[0] === undefined)
+                    return items;
+
+                items.sort((a, b) => {
+                    if (["StartPlan", "EndPlan", "StartFact", "EndFact"].indexOf(index[0]) > -1) {
+                        if (!isDesc[0]) {
+                            return ('' + a[index[0]]).localeCompare(b[index[0]]);
+                        } else {
+                            return ('' + b[index[0]]).localeCompare(a[index[0]]);
+                        }
+                    } else {
+                        if (!isDesc[0]) {
+                            return a[index[0]] < b[index[0]] ? -1 : 1;
+                        } else {
+                            return b[index[0]] < a[index[0]] ? -1 : 1;
+                        }
+                    }
+                });
+
+                return items;
             },
             onRowClick(e) {
                 this.editItem(e);
             },
             onChangeMyTask() {
-                this.myTask = !this.myTask;
+                this.filters.myTask = !this.filters.myTask;
                 this.loadTasks();
+            },
+            onChangeFilterWeek() {
+                this.filters.week = !this.filters.week;
             }
         },
         components: {
@@ -600,9 +801,7 @@
         padding: .15rem !important;
     }
 
-    /*    .v-text-field {
-        padding-top:0;
-    }*/
-
-
+    .toolbar-filters .v-input {
+        height: 48px;
+    }
 </style>

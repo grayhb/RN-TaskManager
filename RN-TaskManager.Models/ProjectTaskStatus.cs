@@ -12,6 +12,8 @@ namespace RN_TaskManager.Models
 
         public string StatusColor { get; set; }
 
+        public int Order { get; set; }
+
         public bool Deleted { get; set; }
 
     }

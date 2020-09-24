@@ -34,6 +34,11 @@
                                 </v-col>
                                 <v-col></v-col>
                             </v-row>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-text-field v-model="editedItem.Order" label="Порядковый номер" type="number" :rules="[e => e >= 0]"></v-text-field>
+                                </v-col>
+                            </v-row>
                         </v-container>
                     </v-card-text>
 
@@ -111,6 +116,7 @@
                 { text: '', value: 'color', width: '50px', sortable: false},
                 { text: 'Наименование статуса', value: 'StatusName' },
                 { text: 'Цвет', value: 'StatusColor' },
+                { text: 'Порядковый номер', value: 'Order' },
                 { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
@@ -118,11 +124,13 @@
                 ProjectTaskStatusId: 0,
                 StatusName: '',
                 StatusColor: '',
+                Order: '',
             },
             defaultItem: {
                 ProjectTaskStatusId: 0,
                 StatusName: '',
                 StatusColor: '',
+                Order: '',
             },
             loading: false,
             api: '/api/projectTaskStatuses'
@@ -228,6 +236,7 @@
                     this.editedItem.StatusColor = this.editedItem.StatusColor.hex;
 
                 formData.append('StatusColor', this.editedItem.StatusColor);
+                formData.append('Order', this.editedItem.Order);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';

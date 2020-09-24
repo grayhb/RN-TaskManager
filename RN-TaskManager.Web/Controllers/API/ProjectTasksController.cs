@@ -147,7 +147,6 @@ namespace RN_TaskManager.Web.Controllers.API
                         var user = await _userRepository.FindByIdAsync(userId);
                         newItem.ProjectTaskPerformers.Add(new ProjectTaskPerformer()
                         {
-                            Task = newItem,
                             User = user
                         });
                     }
