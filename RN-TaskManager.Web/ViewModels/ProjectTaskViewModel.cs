@@ -13,8 +13,8 @@ namespace RN_TaskManager.Web.ViewModels
         public int ProjectId { get; set; }
         public Project Project { get; set; }
 
-        public int? ProjectTaskTypeId { get; set; }
-        public ProjectTaskType TaskType { get; set; }
+        public int? TaskTypeId { get; set; }
+        public TaskType TaskType { get; set; }
 
         public string Details { get; set; }
         public string Note { get; set; }
@@ -49,6 +49,10 @@ namespace RN_TaskManager.Web.ViewModels
         public string Users { get; set; }
         public string Performers { get; set; }
 
+        public double? EffectBeforeHours { get; set; }
+        public double? EffectAfterHours { get; set; }
+        public string BlockName { get; set; }
+
 
         public string ProjectName => Project != null ? Project.ProjectName : "";
         public int ProjectImportance => Project != null ? Project.ProjectImportance : 0;
@@ -56,7 +60,7 @@ namespace RN_TaskManager.Web.ViewModels
 
         public string GroupName => Group != null ? Group.GroupName : "";
 
-        public string TaskTypeName => TaskType != null ? TaskType.ProjectTaskTypeName : "";
+        public string TaskTypeName => TaskType != null ? TaskType.TaskTypeName : "";
 
         public string TaskStatusName => TaskStatus != null ? TaskStatus.StatusName : "";
     }

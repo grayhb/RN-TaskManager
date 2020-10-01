@@ -25,4 +25,8 @@
     <ProjectReference Include="..\RN-TaskManager.DAL\RN-TaskManager.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="vue-src\store\modules\" />
+  </ItemGroup>
+
 </Project>

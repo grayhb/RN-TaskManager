@@ -43,6 +43,7 @@
                     </v-card-text>
 
                     <v-card-actions>
+                        <v-btn color="red darken-1" text @click="deleteItem">Удалить</v-btn>
                         <v-spacer></v-spacer>
                         <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
                         <v-btn color="blue darken-1" text @click="save">Сохранить</v-btn>
@@ -54,7 +55,8 @@
         <v-data-table :headers="headers"
                       :items="items"
                       :loading="loading"
-                      dense="true"
+                      class="cursor-pointer"
+                      dense
                       hide-default-footer="true"
                       @click:row="e => editItem(e)"
                       items-per-page="500">
@@ -65,22 +67,6 @@
                         >
                     mdi-brightness-1
                 </v-icon>
-            </template>
-
-
-            <template v-slot:item.actions="{ item }">
-                <div class="d-flex">
-                    <v-spacer></v-spacer>
-                    <v-icon small
-                            class="mr-2"
-                            @click="editItem(item)">
-                        mdi-pencil
-                    </v-icon>
-                    <v-icon small
-                            @click="deleteItem(item)">
-                        mdi-delete
-                    </v-icon>
-                </div>
             </template>
 
             <template slot="no-data">
@@ -117,7 +103,6 @@
                 { text: 'Наименование статуса', value: 'StatusName' },
                 { text: 'Цвет', value: 'StatusColor' },
                 { text: 'Порядковый номер', value: 'Order' },
-                { text: '', value: 'actions', sortable: false },
             ],
             editedIndex: -1,
             editedItem: {
@@ -187,21 +172,21 @@
                 this.editedItem = Object.assign({}, item)
                 this.dialog = true
             },
-            async deleteItem(item) {
+            async deleteItem() {
 
                 if (!confirm("Удалить выбранную запись?")) return;
 
                 let self = this;
 
-                await fetch(this.api + '/' + item.ProjectTaskStatusId, {
+                await fetch(this.api + '/' + this.editedItem.ProjectTaskStatusId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
                     .then(async (response) => {
 
                         if (response.ok) {
-                            let index = this.items.indexOf(item);
-                            this.items.splice(index, 1);
+                            this.items.splice(this.editedIndex, 1);
+                            this.close();
                         }
                         else {
                             if (response.status === 400) {

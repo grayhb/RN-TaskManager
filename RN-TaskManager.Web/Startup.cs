@@ -59,6 +59,7 @@ namespace RN_TaskManager.Web
             services.AddScoped<IProjectTaskRepository, ProjectTaskRepository>();
             services.AddScoped<IProjectTaskStatusRepository, ProjectTaskStatusRepository>();
             services.AddScoped<IProjectTaskTypeRepository, ProjectTaskTypeRepository>();
+            services.AddScoped<ITaskTypeRepository, TaskTypeRepository>();
             services.AddScoped<IProjectTaskPerformerRepository, ProjectTaskPerformerRepository>();
 
             #endregion

@@ -2,7 +2,7 @@
     <div class="component-container">
 
         <v-toolbar flat color="white">
-            <v-toolbar-title>{{title}}</v-toolbar-title>
+            <v-toolbar-title>{{title}} [{{countItems}}]</v-toolbar-title>
 
             <v-divider class="mx-4"
                        inset
@@ -17,7 +17,7 @@
                 Мои задачи
             </v-btn>
 
-            <v-btn @click="onChangeFilterWeek" class="mr-2">
+            <v-btn @click="onChangeFilterWeek" class="mr-2" title="Нет окончания факта и окончание плановое попадает на текущую неделю">
                 <v-icon small
                         :color="filters.week ? 'green' : 'grey'"
                         class="mr-2">
@@ -52,35 +52,32 @@
                         <span class="headline ml-2">Карточка задачи</span>
                     </v-card-title>
 
-                    <v-card-text>
+                    <v-card-text class="card-body">
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-textarea label="Описание работы" v-model="editedItem.Details" rows="2" dense></v-textarea>
+                                    <v-textarea single-line label="Описание работы" v-model="editedItem.Details" rows="3" dense></v-textarea>
                                 </v-col>
                             </v-row>
 
                             <v-row>
                                 <v-col cols="5">
-                                    <v-select :items="projects"
-                                              item-text="ProjectName"
-                                              item-value="ProjectId"
-                                              v-model="editedItem.ProjectId"
-                                              v-on:change="loadTaskTypes"
-                                              :rules="[e => e > 0]"
-                                              dense
-                                              label="Проект"></v-select>
+                                    <v-autocomplete :items="projects"
+                                                    item-text="ProjectName"
+                                                    item-value="ProjectId"
+                                                    v-model="editedItem.ProjectId"
+                                                    :rules="[e => e > 0]"
+                                                    dense
+                                                    label="Проект"></v-autocomplete>
                                 </v-col>
                                 <v-col>
-                                    <v-select :items="taskTypes"
-                                              item-text="ProjectTaskTypeName"
-                                              item-value="ProjectTaskTypeId"
-                                              v-model="editedItem.ProjectTaskTypeId"
-                                              :rules="[e => e > 0]"
-                                              :loading="loadings.taskTypes"
-                                              :disabled="loadings.taskTypes"
-                                              dense
-                                              label="Тип задачи"></v-select>
+                                    <v-autocomplete :items="taskTypes"
+                                                    item-text="TaskTypeName"
+                                                    item-value="TaskTypeId"
+                                                    v-model="editedItem.TaskTypeId"
+                                                    :rules="[e => e > 0]"
+                                                    dense
+                                                    label="Тип задачи"></v-autocomplete>
                                 </v-col>
                                 <v-col cols="3">
                                     <v-select :items="statuses"
@@ -105,15 +102,14 @@
                                 </v-col>
 
                                 <v-col>
-                                    <v-select v-model="editedItem.Users"
-                                              :items="users.filter(e => e.GroupId === editedItem.GroupId)"
-                                              item-text="ShortName"
-                                              item-value="UserId"
-                                              attach
-                                              dense
-                                              single-line
-                                              label="Исполнители"
-                                              multiple></v-select>
+                                    <v-autocomplete v-model="editedItem.Users"
+                                                    :items="users"
+                                                    item-text="ShortName"
+                                                    item-value="UserId"
+                                                    dense
+                                                    single-line
+                                                    label="Исполнители"
+                                                    multiple></v-autocomplete>
                                 </v-col>
                             </v-row>
 
@@ -141,7 +137,7 @@
                                     <datePicker v-model="editedItem.StartFact" label="Фактическое начало"></datePicker>
                                 </v-col>
                                 <v-col>
-                                    <datePicker v-model="editedItem.EndFact" label="Фактическое окончание"></datePicker>
+                                    <datePicker v-model="editedItem.EndFact" label="Фактическое окончание" v-on:input="onChangeEndFact"></datePicker>
                                 </v-col>
                                 <v-col cols="1">
                                 </v-col>
@@ -157,16 +153,44 @@
 
                             <v-row>
                                 <v-col>
-                                    <v-textarea label="Примечание" v-model="editedItem.Note" rows="2" dense></v-textarea>
+                                    <v-textarea single-line label="Примечание" v-model="editedItem.Note" rows="5" dense class="font-small"></v-textarea>
                                 </v-col>
                             </v-row>
+
+                            <v-row>
+                                <v-col>
+                                    <v-select v-model="editedItem.BlockName"
+                                                    :items="blocks"
+                                                    dense
+                                                    single-line
+                                                    label="Блок"></v-select>
+                                </v-col>
+
+                                <v-col>
+                                    <v-text-field v-model="editedItem.EffectBeforeHours"
+                                                  label="Трудоемкость до автоматизации"
+                                                  type="number"
+                                                  dense
+                                                  :rules="[e => e >= 0 ]">
+                                    </v-text-field>
+                                </v-col>
+
+                                <v-col>
+                                    <v-text-field v-model="editedItem.EffectAfterHours"
+                                                  label="Трудоемкость после автоматизации"
+                                                  type="number"
+                                                  dense
+                                                  :rules="[e => e >= 0 ]">
+                                    </v-text-field>
+                                </v-col>
+                            </v-row>
+
 
                         </v-container>
                     </v-card-text>
 
                     <v-card-actions>
                         <v-btn color="red darken-1" text @click="deleteItem">Удалить</v-btn>
-
                         <v-spacer></v-spacer>
                         <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
                         <v-btn color="blue darken-1"
@@ -263,6 +287,7 @@
                       hide-default-footer="true"
                       @click:row="onRowClick"
                       :custom-sort="customSort"
+                      :item-class="rowClass"
                       items-per-page="500">
 
             <template v-slot:item.TaskTypeName="{ item }">
@@ -336,86 +361,83 @@
 <script>
     import datePicker from './date-picker.vue'
 
+    const taskTemplate = {
+        ProjectTaskId: 0,
+        ProjectId: 0,
+        ProjectTaskStatusId: 3,
+        TaskTypeId: 0,
+        GroupId: 0,
+        Details: '',
+        Note: '',
+        StartPlan: new Date(Date.now()).toISOString(),
+        EndPlan: '',
+        StartFact: '',
+        EndFact: '',
+        DurationHours: 0,
+        Priority: 0,
+        Users: [],
+        EffectBeforeHours: 0,
+        EffectAfterHours: 0,
+        BlockName: '',
+    };
+
     export default {
-        data: () => ({
-            title: 'Задачи',
-            dialog: false,
-            snackbar: false,
-            errorMessage: '',
-            items: [],
-            projects: [],
-            groups: [],
-            statuses: [],
-            taskTypes: [],
-            users: [],
-            headers: [
-                { text: '', value: 'TaskStatusName', width: '30px', sortable: false },
-                { text: '', value: 'TaskTypeName', width: '40px' },
-
-                { text: 'Проект', value: 'ProjectName', filterable: true },
-                { text: 'Описание работы', value: 'Details' },
-
-                { text: 'Начало план', value: 'StartPlan', width: '145px' },
-                { text: 'Окончание план', value: 'EndPlan', width: '145px' },
-                { text: 'Начало факт', value: 'StartFact', width: '145px' },
-                { text: 'Окончание факт', value: 'EndFact', width: '145px' },
-
-                { text: 'Исполнитель', value: 'Performers' },
-
-                { text: 'Группа', value: 'GroupName', width: '145px' },
-                //{ text: '', value: 'actions', sortable: false, width: '100px' },
-            ],
-            editedIndex: -1,
-            editedItem: {
-                ProjectTaskId: 0,
-                ProjectId: 0,
-                ProjectTaskStatusId: 0,
-                ProjectTaskTypeId: 0,
-                GroupId: 0,
-                Details: '',
-                Note: '',
-                StartPlan: new Date().toISOString().substr(0, 10),
-                EndPlan: '',
-                StartFact: '',
-                EndFact: '',
-                DurationHours: 0,
-                Priority: 0,
-                Users: [],
-            },
-            defaultItem: {
-                ProjectTaskId: 0,
-                ProjectId: 0,
-                ProjectTaskStatusId: 0,
-                ProjectTaskTypeId: 0,
-                GroupId: 0,
-                Details: '',
-                Note: '',
-                StartPlan: new Date(Date.now()).toISOString(),
-                EndPlan: '',
-                StartFact: '',
-                EndFact: '',
-                DurationHours: 0,
-                Priority: 0,
-                Users: [],
-            },
-            loadings: {
-                firstLoad: false,
-                items: false,
-                performers: false,
-                taskTypes: false,
-                save: false,
-            },
-            filters: {
-                status: [],
-                performers: [],
+        data: function () {
+            return {
+                title: 'Задачи',
+                constants: {
+                    statusInWorkIndex: 3,
+                    statusEndIndex: 4,
+                },
+                dialog: false,
+                snackbar: false,
+                errorMessage: '',
+                items: [],
+                countItems: 0,
                 projects: [],
                 groups: [],
-                myTask: true,
-                week: false
-            },
-            search: '',
-            api: '/api/projectTasks'
-        }),
+                statuses: [],
+                taskTypes: [],
+                users: [],
+                headers: [
+                    { text: '', value: 'TaskStatusName', width: '30px', sortable: false },
+                    { text: '', value: 'TaskTypeName', width: '40px' },
+
+                    { text: 'Проект', value: 'ProjectName', filterable: true },
+                    { text: 'Описание работы', value: 'Details' },
+
+                    { text: 'Начало план', value: 'StartPlan', width: '145px' },
+                    { text: 'Окончание план', value: 'EndPlan', width: '145px' },
+                    { text: 'Начало факт', value: 'StartFact', width: '145px' },
+                    { text: 'Окончание факт', value: 'EndFact', width: '145px' },
+
+                    { text: 'Исполнитель', value: 'Performers' },
+
+                    { text: 'Группа', value: 'GroupName', width: '145px' },
+                    //{ text: '', value: 'actions', sortable: false, width: '100px' },
+                ],
+                editedIndex: -1,
+                editedItem: Object.assign({}, taskTemplate),
+                loadings: {
+                    firstLoad: false,
+                    items: false,
+                    performers: false,
+                    taskTypes: false,
+                    save: false,
+                },
+                filters: {
+                    status: [],
+                    performers: [],
+                    projects: [],
+                    groups: [],
+                    myTask: true,
+                    week: false
+                },
+                search: '',
+                blocks: ['ПИР', 'СИПОЭ'],
+                api: '/api/projectTasks'
+            }
+        },
         created() {
             this.loadItems();
         },
@@ -436,8 +458,8 @@
                     var first = currentDate.getDate() - currentDate.getDay() + 1;
                     var last = first + 6;
 
-                    var firstday = new Date(currentDate.setDate(first));
-                    var lastday = new Date(currentDate.setDate(last));
+                    var firstday = new Date(currentDate.setDate(first)).getTime();
+                    var lastday = new Date(currentDate.setDate(last)).getTime();
 
                     items = items.filter(e => {
 
@@ -446,21 +468,24 @@
                         let dEnd = null;
 
                         if (e.StartPlan !== null) {
-                            dStart = new Date(e.StartPlan);
+                            dStart = new Date(e.StartPlan).getTime();
 
                             if (e.StartFact !== null)
-                                dStart = new Date(e.StartPlan);
+                                dStart = new Date(e.StartPlan).getTime();
                         }
 
                         if (e.EndPlan !== null) {
-                            dEnd = new Date(e.EndPlan);
+                            dEnd = new Date(e.EndPlan).getTime();
 
-                            if (e.EndFact !== null)
-                                dEnd = new Date(e.EndFact);
+                            if (e.EndFact !== null) {
+                                //dEnd = new Date(e.EndFact).getTime();
+                                return false;
+                            }
                         }
+                        
 
                         if (dStart !== null && dEnd !== null)
-                            pass = (dStart <= firstday && dEnd >= firstday) || (dStart >= firstday && dStart <= lastday) ;
+                            pass = (dStart <= firstday && dEnd >= firstday) || (dStart >= firstday && dStart <= lastday) || (dStart <= firstday && dEnd <= firstday);
 
                         return pass;
                     });
@@ -482,11 +507,11 @@
                 if (this.filters.performers.length > 0)
                     items = items.filter(e => {
 
-                        let users = e.Users.split(',');
+                        let users = e.Users;
                         let pass = false;
 
                         for (let user of users) {
-                            if (this.filters.performers.indexOf(Number.parseInt(user)) > -1) {
+                            if (this.filters.performers.indexOf(user) > -1) {
                                 pass = true;
                                 break;
                             }
@@ -498,8 +523,10 @@
                 // поиск
                 items = items.filter(e => this.searchItem(e));
 
+                this.countItems = items.length;
+
                 return items;
-            }
+            },
         },
         methods: {
             fetchData(uri, callback) {
@@ -540,7 +567,14 @@
                 }
 
                 await this.fetchData(uri, (data) => {
-                    self.items = data;
+                    self.items = data.map(e => {
+
+                        if (e.Users !== null)
+                            e.Users = e.Users.split(',').map(s => parseInt(s, 0));
+
+                        return e;
+                    });
+
                     self.loadings.users = false;
                 });
 
@@ -552,61 +586,34 @@
                 let self = this;
 
                 await this.fetchData('/api/projects', (data) => {
-                    self.projects = data;
+                    self.projects = self.sortArray(data, 'ProjectName', 'string');
                 });
 
                 await this.fetchData('/api/groups', (data) => {
-                    self.groups = data;
+                    self.groups = self.sortArray(data, 'GroupName', 'string');
                 });
 
                 await this.fetchData('/api/projectTaskStatuses', (data) => {
                     self.statuses = data;
-                    self.filters.status = [self.statuses[0].ProjectTaskStatusId];
+                    // фильтр по умолчанию - В работе и В обработке
+                    self.filters.status = [2,3];
                 });
 
                 await this.fetchData('/api/users', (data) => {
-                    self.users = data;
+                    self.users = self.sortArray(data, 'ShortName', 'string');
+                });
+
+                await this.fetchData('/api/taskTypes', (data) => {
+                    self.taskTypes = self.sortArray(data, 'TaskTypeName', 'string');
                 });
 
                 await this.loadTasks();
 
                 this.loadings.firstLoad = false;
             },
-            loadTaskTypes(projectId) {
-
-                this.loadings.taskTypes = true;
-
-                let self = this;
-
-                this.fetchData('/api/projectTaskTypes/p/' + projectId, (data) => {
-                    self.taskTypes = data;
-                    self.loadings.taskTypes = false;
-                });
-            },
-            async loadPerformers(projectTaskId) {
-                let self = this;
-
-                this.editedItem.Users = [];
-                this.loadings.performers = true;
-
-                await this.fetchData('/api/projectTaskPerformers/task/' + projectTaskId, (data) => {
-                    self.editedItem.Users = data.map(e => e.UserId);
-                    self.loadings.performers = false;
-                });
-
-            },
             editItem(item) {
                 this.editedIndex = this.items.indexOf(item);
                 this.editedItem = Object.assign({}, item);
-
-                if (this.editedItem.ProjectId > 0 && this.editedItem.ProjectTaskTypeId > 0) {
-                    this.loadTaskTypes(this.editedItem.ProjectId);
-                }
-
-                if (this.editedItem.ProjectTaskId > 0) {
-                    this.loadPerformers(this.editedItem.ProjectTaskId);
-                }
-
                 this.dialog = true;
             },
             async deleteItem() {
@@ -642,9 +649,8 @@
             },
             close() {
                 this.dialog = false
-                this.taskTypes = [];
                 this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, this.defaultItem)
+                    this.editedItem = Object.assign({}, taskTemplate)
                     this.editedIndex = -1
                 })
             },
@@ -659,7 +665,7 @@
 
                 formData.append('ProjectId', this.editedItem.ProjectId);
                 formData.append('ProjectTaskStatusId', this.editedItem.ProjectTaskStatusId);
-                formData.append('ProjectTaskTypeId', this.editedItem.ProjectTaskTypeId);
+                formData.append('TaskTypeId', this.editedItem.TaskTypeId);
                 formData.append('GroupId', this.editedItem.GroupId);
 
                 formData.append('StartPlan', this.toISOString(this.editedItem.StartPlan));
@@ -674,6 +680,10 @@
                 formData.append('Priority', this.editedItem.Priority);
 
                 formData.append('Users', this.editedItem.Users);
+
+                formData.append('BlockName', this.editedItem.BlockName);
+                formData.append('EffectAfterHours', this.editedItem.EffectAfterHours);
+                formData.append('EffectBeforeHours', this.editedItem.EffectBeforeHours);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';
@@ -692,6 +702,9 @@
                         if (response.ok) {
 
                             const item = await response.json();
+
+                            if (item.Users !== null)
+                                item.Users = item.Users.split(',').map(s => parseInt(s, 0));
 
                             if (this.editedIndex > -1)
                                 Object.assign(self.items[this.editedIndex], item);
@@ -740,19 +753,12 @@
 
                 return new Date(Date.parse(d)).toLocaleDateString();
             },
-            sortFormat(d) {
-
-                if (d === undefined || d === null || d === '')
-                    return '';
-
-                return new Date(Date.parse(d)).toISOString().split('T')[0];
-            },
             searchItem(e) {
 
-                if (this.search === null || this.search === '')
+                if (this.search === null || this.search === '' || this.search.length < 2)
                     return true;
 
-                if (e.Details.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
+                if (e.Details !== null && e.Details.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
                     return true;
 
                 if (e.ProjectName.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))
@@ -789,6 +795,28 @@
 
                 return items;
             },
+            sortArray(items, fieldName, fieldType) {
+                items.sort((a, b) => {
+                    if (fieldType === 'number')
+                        return a[fieldName] - b[fieldName];
+                    else if (fieldType === 'string')
+                        return ('' + a[fieldName]).localeCompare(b[fieldName]);
+                });
+
+                return items;
+            },
+            rowClass(e) {
+
+                if (e.EndPlan === null || e.EndFact !== null)
+                    return;
+
+                let dNow = Date.now();
+                let dEnd = new Date(e.EndPlan).getTime();
+
+                if (dEnd < dNow)
+                    return 'red lighten-4';
+
+            },
             onRowClick(e) {
                 this.editItem(e);
             },
@@ -798,7 +826,11 @@
             },
             onChangeFilterWeek() {
                 this.filters.week = !this.filters.week;
-            }
+            },
+            onChangeEndFact(e) {
+                if (e !== '')
+                    this.editedItem.ProjectTaskStatusId = this.constants.statusEndIndex;
+            },
         },
         components: {
             datePicker
@@ -807,6 +839,13 @@
 </script>
 
 <style>
+
+    .font-small textarea {
+        font-size:14px;
+        line-height:16px !important;
+        padding-top:.5rem;
+    }
+
     .col {
         padding: .15rem !important;
     }
@@ -818,4 +857,13 @@
     .table-tasks .v-data-table-header th {
         padding: 0 10px !important;
     }
+
+    .table-tasks tbody td {
+        cursor:pointer;
+    }
+
+    .card-body {
+        padding-bottom:0px !important;
+    }
+
 </style>

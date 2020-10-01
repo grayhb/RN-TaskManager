@@ -56,12 +56,14 @@ namespace RN_TaskManager.Web.Controllers.API
         {
             try
             {
+                if (item.GroupName == "")
+                    return BadRequest("Название группы не должно быть пустым");
+
                 var existItems = await _groupRepository
-                .FindAsync(e => e.GroupName.ToLower().Equals(item.GroupName.ToLower()) && !e.Deleted
-                || e.GroupNumber.ToLower().Equals(item.GroupNumber.ToLower()) && !e.Deleted);
+                .FindAsync(e => e.GroupName.ToLower().Equals(item.GroupName.ToLower()) && !e.Deleted);
 
                 if (existItems.Count > 0)
-                    return BadRequest("Группа с таким номером или названием уже существует");
+                    return BadRequest("Группа с таким названием уже существует");
 
                 if (item.GroupId > 0)
                     return BadRequest("Идентификатор записи должен быть равен 0");
@@ -77,21 +79,29 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpPut]
-        public async Task<ActionResult<Group>> UpdateItem([FromForm] Group group)
+        public async Task<ActionResult<Group>> UpdateItem([FromForm] Group item)
         {
             try
             {
-                var existItem = await _groupRepository.FindByIdAsync(group.GroupId);
+                if (item.GroupName == "")
+                    return BadRequest("Название группы не должно быть пустым");
 
-                if (existItem == null)
+                var existItems = await _groupRepository
+                .FindAsync(e => e.GroupName.ToLower().Equals(item.GroupName.ToLower()) && !e.Deleted);
+
+                if (existItems.Count > 0)
+                    return BadRequest("Группа с таким названием уже существует");
+
+                var editedItem = await _groupRepository.FindByIdAsync(item.GroupId);
+
+                if (editedItem == null)
                     return NotFound();
 
-                existItem.GroupName = group.GroupName;
-                existItem.GroupNumber = group.GroupNumber;
+                editedItem.GroupName = item.GroupName;
+                editedItem.GroupNumber = item.GroupNumber;
 
-
-                await _groupRepository.EditAsync(existItem);
-                return existItem;
+                await _groupRepository.EditAsync(editedItem);
+                return editedItem;
             }
             catch (Exception ex)
             {

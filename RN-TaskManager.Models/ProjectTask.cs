@@ -15,9 +15,17 @@ namespace RN_TaskManager.Models
         public int ProjectId { get; set; }
         public Project Project { get; set; }
 
+        #region УДАЛИТЬ
+
         [ForeignKey("ProjectTaskType")]
         public int? ProjectTaskTypeId { get; set; }
-        public ProjectTaskType TaskType { get; set; }
+        public ProjectTaskType ProjectTaskType { get; set; }
+
+        #endregion
+
+        [ForeignKey("TaskType")]
+        public int? TaskTypeId { get; set; }
+        public TaskType TaskType { get; set; }
 
         public string Details { get; set; }
         public string Note { get; set; }
@@ -52,6 +60,13 @@ namespace RN_TaskManager.Models
         public string LoginEdited { get; set; }
         public string LoginDeleted { get; set; }
 
+
+        public double? EffectBeforeHours { get; set; }
+        public double? EffectAfterHours { get; set; }
+        public string BlockName { get; set; }
+
+
         public List<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
+
     }
 }

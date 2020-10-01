@@ -20,6 +20,7 @@ namespace RN_TaskManager.Web.Controllers.API
         private readonly IProjectTaskRepository _projectTaskRepository;
         private readonly IProjectRepository _projectRepository;
         private readonly IProjectTaskTypeRepository _projectTaskTypeRepository;
+        private readonly ITaskTypeRepository _taskTypeRepository;
         private readonly IProjectTaskStatusRepository _projectTaskStatusRepository;
         private readonly IProjectTaskPerformerRepository _projectTaskPerformerRepository;
         private readonly IGroupRepository _groupRepository;
@@ -31,6 +32,7 @@ namespace RN_TaskManager.Web.Controllers.API
             IProjectTaskRepository projectTaskRepository,
             IProjectRepository projectRepository,
             IProjectTaskTypeRepository projectTaskTypeRepository,
+            ITaskTypeRepository taskTypeRepository,
             IProjectTaskStatusRepository projectTaskStatusRepository,
             IProjectTaskPerformerRepository projectTaskPerformerRepository,
             IGroupRepository groupRepository,
@@ -41,6 +43,7 @@ namespace RN_TaskManager.Web.Controllers.API
             _projectTaskRepository = projectTaskRepository;
             _projectRepository = projectRepository;
             _projectTaskTypeRepository = projectTaskTypeRepository;
+            _taskTypeRepository = taskTypeRepository;
             _projectTaskStatusRepository = projectTaskStatusRepository;
             _projectTaskPerformerRepository = projectTaskPerformerRepository;
             _groupRepository = groupRepository;
@@ -115,7 +118,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (group == null)
                     return BadRequest("Выбранная группа не найдена");
 
-                var taskType = await ProjectTaskTypeByIdAsync(item.ProjectTaskTypeId);
+                var taskType = await TaskTypeByIdAsync(item.TaskTypeId);
 
                 if (taskType == null)
                     return BadRequest("Выбранный тип задачи не найден");
@@ -182,7 +185,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (group == null)
                     return BadRequest("Выбранная группа не найдена");
 
-                var taskType = await ProjectTaskTypeByIdAsync(item.ProjectTaskTypeId);
+                var taskType = await TaskTypeByIdAsync(item.TaskTypeId);
 
                 if (taskType == null)
                     return BadRequest("Выбранный тип задачи не найден");
@@ -207,6 +210,10 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 existItem.StartFact = item.StartFact;
                 existItem.EndFact = item.EndFact;
+
+                existItem.BlockName = item.BlockName;
+                existItem.EffectAfterHours = item.EffectAfterHours;
+                existItem.EffectBeforeHours = item.EffectBeforeHours;
 
                 existItem.DateEdited = DateTime.Now;
 
@@ -301,7 +308,7 @@ namespace RN_TaskManager.Web.Controllers.API
 
         async Task<Group> GroupByIdAsync(int? id) => id > 0 ? await _groupRepository.FindByIdAsync(id.Value) : null;
 
-        async Task<ProjectTaskType> ProjectTaskTypeByIdAsync(int? id) => id > 0 ? await _projectTaskTypeRepository.FindByIdAsync(id.Value) : null;
+        async Task<TaskType> TaskTypeByIdAsync(int? id) => id > 0 ? await _taskTypeRepository.FindByIdAsync(id.Value) : null;
 
         async Task<ProjectTaskStatus> ProjectTaskStatusByIdAsync(int? id) => id > 0 ? await _projectTaskStatusRepository.FindByIdAsync(id.Value) : null;
 

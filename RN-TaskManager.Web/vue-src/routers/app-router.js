@@ -3,6 +3,7 @@ import notFound from '../not-found.vue';
 import groups from "../components/groups";
 import users from "../components/users";
 import projectTaskStatus from "../components/projectTaskStatus";
+import taskTypes from "../components/task-types";
 import projects from "../components/projects";
 import projectTasks from "../components/project-tasks";
 
@@ -30,7 +31,7 @@ export default new Router({
             display: false
         },
         {
-            path: "/project-tasks",
+            path: "/project-tasks/:task_id",
             name: "project-tasks",
             component: projectTasks,
             display: true,
@@ -46,6 +47,15 @@ export default new Router({
             label: "Проекты",
             panel: "Справочники",
             icon: "mdi-briefcase"
+        },
+        {
+            path: "/taskTypes",
+            name: "taskTypes",
+            component: taskTypes,
+            display: true,
+            label: "Типы работ",
+            panel: "Справочники",
+            icon: "mdi-label"
         },
         {
             path: "/projectTaskStatus",

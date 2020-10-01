@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RN_TaskManager.DAL.Context;
 
 namespace RN_TaskManager.DAL.Migrations
 {
     [DbContext(typeof(RN_TaskManagerContext))]
-    partial class RN_TaskManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20201001081928_CreateTaskTypes")]
+    partial class CreateTaskTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -76,9 +78,6 @@ namespace RN_TaskManager.DAL.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("BlockName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("DateCreated")
                         .HasColumnType("datetime2");
 
@@ -96,12 +95,6 @@ namespace RN_TaskManager.DAL.Migrations
 
                     b.Property<int>("DurationHours")
                         .HasColumnType("int");
-
-                    b.Property<double?>("EffectAfterHours")
-                        .HasColumnType("float");
-
-                    b.Property<double?>("EffectBeforeHours")
-                        .HasColumnType("float");
 
                     b.Property<DateTime?>("EndFact")
                         .HasColumnType("datetime2");
@@ -244,9 +237,6 @@ namespace RN_TaskManager.DAL.Migrations
 
                     b.Property<bool>("Deleted")
                         .HasColumnType("bit");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Order")
                         .HasColumnType("int");

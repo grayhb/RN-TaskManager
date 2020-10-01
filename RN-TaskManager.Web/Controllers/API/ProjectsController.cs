@@ -72,6 +72,9 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 if (item.UserId > 0)
                     item.Responsible = await _userRepository.FindByIdAsync(item.UserId.Value);
+                else
+                    return BadRequest("Не указан Ответственный");
+
 
                 await _projectRepository.CreateAsync(item);
 
@@ -100,6 +103,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 }
 
                 existItem.ProjectName = item.ProjectName;
+                existItem.ProjectDescription = item.ProjectDescription;
                 existItem.ProjectImportance = item.ProjectImportance;
 
                 await _projectRepository.EditAsync(existItem);

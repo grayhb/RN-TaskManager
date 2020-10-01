@@ -24,8 +24,17 @@
                         <v-container>
                             <v-row>
                                 <v-col cols="12">
-                                    <v-text-field v-model="editedItem.GroupNumber" label="Номер группы"></v-text-field>
-                                    <v-text-field v-model="editedItem.GroupName" label="Наименование группы"></v-text-field>
+                                    <v-text-field v-model="editedItem.TaskTypeName" label="Наименование типа работ"></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-textarea label="Описание типа работ" v-model="editedItem.Note" rows="3" dense></v-textarea>
+                                </v-col>
+                            </v-row>
+                            <v-row>
+                                <v-col cols="12">
+                                    <v-text-field v-model="editedItem.Order" label="Порядковый номер" type="number" :rules="[e => e >= 0]"></v-text-field>
                                 </v-col>
                             </v-row>
                         </v-container>
@@ -74,28 +83,30 @@
 <script>
     export default {
         data: () => ({
-            title: 'Группы',
+            title: 'Типы работ',
             dialog: false,
             snackbar: false,
             errorMessage: '',
             items: [],
             headers: [
-                { text: 'Номер группы', value: 'GroupNumber', width:'15rem' },
-                { text: 'Наименование группы', value: 'GroupName' },
+                { text: 'Порядковый номер', value: 'Order', width: '15rem' },
+                { text: 'Наименование типа работ', value: 'TaskTypeName' },
+                { text: 'Описание', value: 'Note' },
             ],
             editedIndex: -1,
             editedItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                TaskTypeId: 0,
+                Note: '',
+                Order: 100,
             },
             defaultItem: {
-                GroupId: 0,
-                GroupNumber: '',
-                GroupName: '',
+                TaskTypeId: 0,
+                TaskTypeName: '',
+                Note: '',
+                Order: 100,
             },
             loading: false,
-            api: '/api/groups'
+            api: '/api/taskTypes'
         }),
         created() {
             this.loadItems()
@@ -155,7 +166,7 @@
 
                 let self = this;
 
-                await fetch(this.api + '/' + this.editedItem.GroupId, {
+                await fetch(this.api + '/' + this.editedItem.TaskTypeId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
@@ -192,13 +203,14 @@
                 let method = 'POST';
                 const formData = new FormData();
 
-                formData.append('GroupNumber', this.editedItem.GroupNumber);
-                formData.append('GroupName', this.editedItem.GroupName);
+                formData.append('TaskTypeName', this.editedItem.TaskTypeName);
+                formData.append('Note', this.editedItem.Note);
+                formData.append('Order', this.editedItem.Order);
 
                 if (this.editedIndex > -1) {
                     method = 'PUT';
-                    formData.append('GroupId', this.editedItem.GroupId);
-                } 
+                    formData.append('TaskTypeId', this.editedItem.TaskTypeId);
+                }
 
                 await fetch(this.api, {
                     method: method,
@@ -213,7 +225,7 @@
 
                             if (this.editedIndex > -1)
                                 Object.assign(self.items[this.editedIndex], item);
-                            else 
+                            else
                                 self.items.push(item);
 
                             needClose = true;

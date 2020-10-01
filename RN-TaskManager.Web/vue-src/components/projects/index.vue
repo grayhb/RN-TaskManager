@@ -25,6 +25,7 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-text-field v-model="editedItem.ProjectName" label="Наименование проекта"></v-text-field>
+                                    <v-textarea label="Описание" v-model="editedItem.ProjectDescription" rows="3" dense></v-textarea>
                                     <v-text-field v-model="editedItem.ProjectImportance" label="Важность" type="number" :rules="[e => e >= 0 && e <= 100]"></v-text-field>
                                     <v-select :items="users"
                                               item-text="ShortName"
@@ -32,13 +33,13 @@
                                               v-model="editedItem.UserId"
                                               :rules="[e => e > 0]"
                                               label="Ответственный"></v-select>
-                                    <project-task-types :project-id="editedItem.ProjectId" v-if="editedItem.ProjectId > 0"></project-task-types>
                                 </v-col>
                             </v-row>
                         </v-container>
                     </v-card-text>
 
                     <v-card-actions>
+                        <v-btn color="red darken-1" text @click="deleteItem">Удалить</v-btn>
                         <v-spacer></v-spacer>
                         <v-btn color="blue darken-1" text @click="close">Отмена</v-btn>
                         <v-btn color="blue darken-1" text @click="save">Сохранить</v-btn>
@@ -50,7 +51,8 @@
         <v-data-table :headers="headers"
                       :items="items"
                       :loading="loading"
-                      dense="true"
+                      class="cursor-pointer"
+                      dense
                       hide-default-footer="true"
                       @click:row="e => editItem(e)"
                       items-per-page="500">
@@ -94,8 +96,6 @@
 
 <script>
 
-    import projectTaskTypes from './project-task-types.vue';
-
     export default {
         data: () => ({
             title: 'Проекты',
@@ -105,21 +105,23 @@
             items: [],
             users: [],
             headers: [
+                { text: 'Важность', value: 'ProjectImportance', width:'8rem' },
                 { text: 'Наименование проекта', value: 'ProjectName' },
-                { text: 'Важность', value: 'ProjectImportance' },
-                { text: 'Ответственный', value: 'ResponsibleName' },
-                { text: '', value: 'actions', sortable: false },
+                { text: 'Описание проекта', value: 'ProjectDescription' },
+                { text: 'Ответственный', value: 'ResponsibleName', width: '15rem' },
             ],
             editedIndex: -1,
             editedItem: {
                 ProjectId: 0,
                 ProjectName: '',
+                ProjectDescription: '',
                 ProjectImportance: 1,
                 UserId: 0,
             },
             defaultItem: {
                 ProjectId: 0,
                 ProjectName: '',
+                ProjectDescription: '',
                 ProjectImportance: 1,
                 UserId: 0,
             },
@@ -182,21 +184,21 @@
                 this.editedItem = Object.assign({}, item)
                 this.dialog = true
             },
-            async deleteItem(item) {
+            async deleteItem() {
 
                 if (!confirm("Удалить выбранную запись?")) return;
 
                 let self = this;
 
-                await fetch(this.api + '/' + item.ProjectId, {
+                await fetch(this.api + '/' + this.editedItem.ProjectId, {
                     method: 'DELETE',
                     credentials: 'include',
                 })
                     .then(async (response) => {
 
                         if (response.ok) {
-                            let index = this.items.indexOf(item);
-                            this.items.splice(index, 1);
+                            this.items.splice(this.editedIndex, 1);
+                            this.close();
                         }
                         else {
                             if (response.status === 400) {
@@ -226,6 +228,7 @@
                 const formData = new FormData();
 
                 formData.append('ProjectName', this.editedItem.ProjectName);
+                formData.append('ProjectDescription', this.editedItem.ProjectDescription);
                 formData.append('ProjectImportance', this.editedItem.ProjectImportance);
                 formData.append('UserId', this.editedItem.UserId);
 
@@ -270,9 +273,6 @@
             },
             projectImportanceRules: e => e >= 0 && e <= 100,
         },
-        components: {
-            'project-task-types': projectTaskTypes
-        }
     };
 </script>
 
