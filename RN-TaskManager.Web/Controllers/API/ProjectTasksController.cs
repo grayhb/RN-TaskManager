@@ -24,6 +24,7 @@ namespace RN_TaskManager.Web.Controllers.API
         private readonly IProjectTaskStatusRepository _projectTaskStatusRepository;
         private readonly IProjectTaskPerformerRepository _projectTaskPerformerRepository;
         private readonly IGroupRepository _groupRepository;
+        private readonly IBlockRepository _blockRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
 
@@ -37,6 +38,7 @@ namespace RN_TaskManager.Web.Controllers.API
             IProjectTaskPerformerRepository projectTaskPerformerRepository,
             IGroupRepository groupRepository,
             IUserRepository userRepository,
+            IBlockRepository blockRepository,
             IUserService userService)
         {
             _mapper = mapper;
@@ -49,6 +51,7 @@ namespace RN_TaskManager.Web.Controllers.API
             _groupRepository = groupRepository;
             _userRepository = userRepository;
             _userService = userService;
+            _blockRepository = blockRepository;
         }
 
         [HttpGet]
@@ -83,16 +86,16 @@ namespace RN_TaskManager.Web.Controllers.API
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<ProjectTask>> GetItem(int id)
+        public async Task<ActionResult<ProjectTaskViewModel>> GetItem(int id)
         {
             try
             {
-                var item = await _projectTaskRepository.FindByIdAsync(id);
+                var item = await _projectTaskRepository.ProjectTaskByIdAsync(id);
 
                 if (item == null)
                     return NotFound();
                 else
-                    return item;
+                    return _mapper.Map<ProjectTaskViewModel>(item); ;
             }
             catch (Exception ex)
             {
@@ -128,12 +131,17 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (taskStatus == null)
                     return BadRequest("Выбранный статус не найден");
 
+                var block = await BlockByIdAsync(item.BlockId);
+
                 var newItem = _mapper.Map<ProjectTask>(item);
 
                 newItem.Project = project;
                 newItem.Group = group;
                 newItem.TaskStatus = taskStatus;
                 newItem.TaskType = taskType;
+                
+                if (block != null)
+                    newItem.Block = block;
 
                 newItem.DateCreated = DateTime.Now;
 
@@ -195,6 +203,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 if (taskStatus == null)
                     return BadRequest("Выбранный статус не найден");
 
+                existItem.Block = await BlockByIdAsync(item.BlockId);
                 existItem.Project = project;
                 existItem.Group = group;
                 existItem.TaskStatus = taskStatus;
@@ -210,8 +219,7 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 existItem.StartFact = item.StartFact;
                 existItem.EndFact = item.EndFact;
-
-                existItem.BlockName = item.BlockName;
+                
                 existItem.EffectAfterHours = item.EffectAfterHours;
                 existItem.EffectBeforeHours = item.EffectBeforeHours;
 
@@ -311,6 +319,8 @@ namespace RN_TaskManager.Web.Controllers.API
         async Task<TaskType> TaskTypeByIdAsync(int? id) => id > 0 ? await _taskTypeRepository.FindByIdAsync(id.Value) : null;
 
         async Task<ProjectTaskStatus> ProjectTaskStatusByIdAsync(int? id) => id > 0 ? await _projectTaskStatusRepository.FindByIdAsync(id.Value) : null;
+
+        async Task<Block> BlockByIdAsync(int? id) => id > 0 ? await _blockRepository.FindByIdAsync(id.Value) : null;
 
     }
 }

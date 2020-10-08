@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.IISIntegration;
@@ -10,6 +11,7 @@ using RN_TaskManager.DAL.Context;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Web.AutoMapperProfiles;
 using RN_TaskManager.Web.Services;
+using System.Security.Claims;
 
 namespace RN_TaskManager.Web
 {
@@ -37,6 +39,13 @@ namespace RN_TaskManager.Web
                 options.AutomaticAuthentication = true;
             });
 
+            services.AddScoped<IClaimsTransformation, ClaimsTransformerService>();
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Users", policy => policy.RequireClaim(ClaimTypes.Role, "Users"));
+            });
+
             #endregion
 
             #region DbContexts
@@ -61,6 +70,7 @@ namespace RN_TaskManager.Web
             services.AddScoped<IProjectTaskTypeRepository, ProjectTaskTypeRepository>();
             services.AddScoped<ITaskTypeRepository, TaskTypeRepository>();
             services.AddScoped<IProjectTaskPerformerRepository, ProjectTaskPerformerRepository>();
+            services.AddScoped<IBlockRepository, BlockRepository>();
 
             #endregion
 
@@ -69,6 +79,8 @@ namespace RN_TaskManager.Web
             services.AddScoped<IUserService, UserService>();
 
             #endregion
+
+
 
             services.AddAutoMapper(typeof(TaskManagerAutoMapperProfile));
 
@@ -81,17 +93,40 @@ namespace RN_TaskManager.Web
             });
 
             services.AddHttpContextAccessor();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            //app.UseStatusCodePagesWithRedirects("~/StatusCode/{0}");
+
+
+            app.UseStatusCodePages(async context =>
+            {
+                if (context.HttpContext.Response.StatusCode == 403)
+                    context.HttpContext.Response.Redirect("/StatusCode/403");
+
+                if (context.HttpContext.Response.StatusCode == 404)
+                    context.HttpContext.Response.Redirect("/StatusCode/404");
+            });
+            
             app.UseDeveloperExceptionPage();
 
-            app.UseHttpsRedirection();
+            //if (env.IsDevelopment())
+            //{
+            //}
+            //else
+            //{
+            //    app.UseExceptionHandler("/Error");
+            //    app.UseHsts();
+            //}
+
+            //app.UseHttpsRedirection();
             app.UseStaticFiles();
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

@@ -63,8 +63,10 @@ namespace RN_TaskManager.Models
 
         public double? EffectBeforeHours { get; set; }
         public double? EffectAfterHours { get; set; }
-        public string BlockName { get; set; }
 
+        [ForeignKey("Block")]
+        public int? BlockId { get; set; }
+        public Block Block { get; set; }
 
         public List<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
 

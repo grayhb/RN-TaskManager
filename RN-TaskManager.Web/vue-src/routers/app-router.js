@@ -6,6 +6,7 @@ import projectTaskStatus from "../components/projectTaskStatus";
 import taskTypes from "../components/task-types";
 import projects from "../components/projects";
 import projectTasks from "../components/project-tasks";
+import blocks from "../components/blocks";
 
 
 Vue.use(Router);
@@ -31,10 +32,19 @@ export default new Router({
             display: false
         },
         {
-            path: "/project-tasks/:task_id",
+            path: "/project-tasks",
             name: "project-tasks",
             component: projectTasks,
             display: true,
+            label: "Задачи",
+            panel: "Задачи",
+            icon: "mdi-database"
+        },
+        {
+            path: "/project-tasks/:task_id",
+            name: "project-task",
+            component: projectTasks,
+            display: false,
             label: "Задачи",
             panel: "Задачи",
             icon: "mdi-database"
@@ -56,6 +66,15 @@ export default new Router({
             label: "Типы работ",
             panel: "Справочники",
             icon: "mdi-label"
+        },
+        {
+            path: "/blocks",
+            name: "blocks",
+            component: blocks,
+            display: true,
+            label: "Блоки",
+            panel: "Справочники",
+            icon: "mdi-city"
         },
         {
             path: "/projectTaskStatus",

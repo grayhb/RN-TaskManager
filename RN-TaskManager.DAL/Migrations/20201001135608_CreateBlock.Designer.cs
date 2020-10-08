@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RN_TaskManager.DAL.Context;
 
 namespace RN_TaskManager.DAL.Migrations
 {
     [DbContext(typeof(RN_TaskManagerContext))]
-    partial class RN_TaskManagerContextModelSnapshot : ModelSnapshot
+    [Migration("20201001135608_CreateBlock")]
+    partial class CreateBlock
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -94,8 +96,8 @@ namespace RN_TaskManager.DAL.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<int?>("BlockId")
-                        .HasColumnType("int");
+                    b.Property<string>("BlockName")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("DateCreated")
                         .HasColumnType("datetime2");
@@ -164,8 +166,6 @@ namespace RN_TaskManager.DAL.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("ProjectTaskId");
-
-                    b.HasIndex("BlockId");
 
                     b.HasIndex("GroupId");
 
@@ -323,10 +323,6 @@ namespace RN_TaskManager.DAL.Migrations
 
             modelBuilder.Entity("RN_TaskManager.Models.ProjectTask", b =>
                 {
-                    b.HasOne("RN_TaskManager.Models.Block", "Block")
-                        .WithMany()
-                        .HasForeignKey("BlockId");
-
                     b.HasOne("RN_TaskManager.Models.Group", "Group")
                         .WithMany()
                         .HasForeignKey("GroupId");

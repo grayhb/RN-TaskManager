@@ -1,8 +1,6 @@
 ﻿using RN_TaskManager.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace RN_TaskManager.Web.ViewModels
 {
@@ -48,10 +46,13 @@ namespace RN_TaskManager.Web.ViewModels
 
         public string Users { get; set; }
         public string Performers { get; set; }
+        public List<int> PerformerIds { get; set; }
 
         public double? EffectBeforeHours { get; set; }
         public double? EffectAfterHours { get; set; }
-        public string BlockName { get; set; }
+
+        public int? BlockId { get; set; }
+        public Block Block { get; set; }
 
 
         public string ProjectName => Project != null ? Project.ProjectName : "";
@@ -63,5 +64,7 @@ namespace RN_TaskManager.Web.ViewModels
         public string TaskTypeName => TaskType != null ? TaskType.TaskTypeName : "";
 
         public string TaskStatusName => TaskStatus != null ? TaskStatus.StatusName : "";
+
+        public string BlockName => Block != null ? Block.BlockName : "";
     }
 }

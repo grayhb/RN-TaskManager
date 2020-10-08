@@ -14,6 +14,8 @@ namespace RN_TaskManager.DAL.Context
         public virtual DbSet<ProjectTaskStatus> ProjectTaskStatuses { get; set; }
         public virtual DbSet<ProjectTaskType> ProjectTaskTypes { get; set; }
         public virtual DbSet<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
+        public virtual DbSet<TaskType> TaskTypes { get; set; }
+        public virtual DbSet<Block> Blocks { get; set; }
 
     }
 }

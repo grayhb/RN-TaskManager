@@ -22,6 +22,7 @@ namespace RN_TaskManager.DAL.Repositories
                 .Include(e => e.Project)
                 .Include(e => e.TaskStatus)
                 .Include(e => e.Group)
+                .Include(e => e.Block)
                 .Include(e => e.TaskType)
                 .Include(e => e.ProjectTaskPerformers)
                 .ThenInclude(e => e.User)
@@ -31,11 +32,12 @@ namespace RN_TaskManager.DAL.Repositories
 
         public async Task<List<ProjectTask>> ProjectTasksAsync()
         {
-            return await _context.ProjectTasks.Where(e => !e.Deleted && !e.Project.Deleted && !e.Group.Deleted && !e.TaskStatus.Deleted && !e.TaskStatus.Deleted)
+            return await _context.ProjectTasks.Where(e => !e.Deleted)
                 .Include(e => e.Project)
                 .Include(e => e.TaskStatus)
                 .Include(e => e.Group)
                 .Include(e => e.TaskType)
+                .Include(e => e.Block)
                 .Include(e => e.ProjectTaskPerformers)
                 .ThenInclude(e => e.User)
                 .ToListAsync();
@@ -50,6 +52,7 @@ namespace RN_TaskManager.DAL.Repositories
                 .Include(e => e.TaskStatus)
                 .Include(e => e.Group)
                 .Include(e => e.TaskType)
+                .Include(e => e.Block)
                 .Include(e => e.ProjectTaskPerformers)
                 .ThenInclude(e => e.User)
                 .ToListAsync();

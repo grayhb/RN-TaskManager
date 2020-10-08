@@ -4,11 +4,11 @@
         <v-toolbar flat color="white">
             <v-toolbar-title>{{title}} [{{countItems}}]</v-toolbar-title>
 
-            <v-divider class="mx-4"
+            <v-divider class="mx-3"
                        inset
                        vertical></v-divider>
 
-            <v-btn @click="onChangeMyTask" class="mr-2">
+            <v-btn @click="onChangeMyTask" class="" small>
                 <v-icon small
                         :color="filters.myTask ? 'green' : 'grey'"
                         class="mr-2">
@@ -17,7 +17,7 @@
                 Мои задачи
             </v-btn>
 
-            <v-btn @click="onChangeFilterWeek" class="mr-2" title="Нет окончания факта и окончание плановое попадает на текущую неделю">
+            <v-btn @click="onChangeFilterWeek" class="ml-2" title="Нет окончания факта и окончание плановое попадает на текущую неделю" small>
                 <v-icon small
                         :color="filters.week ? 'green' : 'grey'"
                         class="mr-2">
@@ -26,9 +26,40 @@
                 На неделю
             </v-btn>
 
+            <v-divider class="mx-3"
+                       inset
+                       vertical></v-divider>
+
+            <v-btn @click="onChangeView('table')" class="" title="В виде сплошной таблицы" small color="blue lighten-5">
+                <v-icon small
+                        :color="views.table ? 'green' : 'grey'"
+                        class="mr-2">
+                    mdi-brightness-1
+                </v-icon>
+                Таблица
+            </v-btn>
+
+            <v-btn @click="onChangeView('groupedByGroup')" class="ml-2" title="Сгруппировать по группе и исполнителю" small color="blue lighten-5">
+                <v-icon small
+                        :color="views.groupedByGroup ? 'green' : 'grey'"
+                        class="mr-2">
+                    mdi-brightness-1
+                </v-icon>
+                Группа-Исполнитель
+            </v-btn>
+
+            <v-btn @click="onChangeView('groupedByProject')" class="ml-2" title="Сгруппировать по проекту" small color="blue lighten-5">
+                <v-icon small
+                        :color="views.groupedByProject ? 'green' : 'grey'"
+                        class="mr-2">
+                    mdi-brightness-1
+                </v-icon>
+                Проект
+            </v-btn>
+
             <v-spacer></v-spacer>
 
-            <v-dialog v-model="dialog" max-width="800px">
+            <v-dialog v-model="dialog" max-width="800px" persistent>
                 <template v-slot:activator="{ on, attrs }">
                     <v-btn color="primary"
                            dark
@@ -50,6 +81,15 @@
                         </v-tooltip>
 
                         <span class="headline ml-2">Карточка задачи</span>
+                        <v-spacer></v-spacer>
+                        <v-btn fab
+                               small
+                               depressed
+                               @click="close">
+                            <v-icon>
+                                mdi-close
+                            </v-icon>
+                        </v-btn>
                     </v-card-title>
 
                     <v-card-text class="card-body">
@@ -159,11 +199,13 @@
 
                             <v-row>
                                 <v-col>
-                                    <v-select v-model="editedItem.BlockName"
-                                                    :items="blocks"
-                                                    dense
-                                                    single-line
-                                                    label="Блок"></v-select>
+                                    <v-select v-model="editedItem.BlockId"
+                                              :items="blocks"
+                                              item-text="BlockName"
+                                              item-value="BlockId"
+                                              dense
+                                              clearable
+                                              label="Блок"></v-select>
                                 </v-col>
 
                                 <v-col>
@@ -279,69 +321,28 @@
 
         <v-divider></v-divider>
 
-        <v-data-table class="table-tasks"
-                      :headers="headers"
-                      :items="tasks"
-                      :loading="loadings.users || loadings.firstLoad"
-                      dense="true"
-                      hide-default-footer="true"
-                      @click:row="onRowClick"
-                      :custom-sort="customSort"
-                      :item-class="rowClass"
-                      items-per-page="500">
+        <flatTable v-if="views.table"
+                   :items="tasks"
+                   :loading="loadings.firstLoad"
+                   @select="editItem"></flatTable>
 
-            <template v-slot:item.TaskTypeName="{ item }">
-                <span>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <b v-bind="attrs"
-                               v-on="on">
-                                {{abbreviation(item.TaskTypeName)}}
-                            </b>
-                        </template>
-                        <span>{{item.TaskTypeName}}</span>
-                    </v-tooltip>
-                </span>
-            </template>
+        <groupItem v-else-if="views.groupedByGroup"
+                   :title="group.GroupName" class="level-1" v-for="group in filtered_groups" :key="'groupItem_group_' + group.GroupId">
+            <groupItem :title="user.ShortName" class="level-2" v-for="user in users.filter(e => e.GroupId === group.GroupId)" :key="'groupItem_user_' + user.UserId">
+                <flatTable :items="tasks.filter(e => e.PerformerIds.indexOf(user.UserId) !== -1)"
+                           :loading="loadings.firstLoad"
+                           :excludeHeaders="['GroupName', 'Performers']"
+                           @select="editItem"></flatTable>
+            </groupItem>
+        </groupItem>
 
-            <template v-slot:item.StartPlan="{ item }">
-                <span>{{localeFormat(item.StartPlan)}}</span>
-            </template>
-
-            <template v-slot:item.EndPlan="{ item }">
-                <span>{{localeFormat(item.EndPlan)}}</span>
-            </template>
-
-            <template v-slot:item.StartFact="{ item }">
-                <span>{{localeFormat(item.StartFact)}}</span>
-            </template>
-
-            <template v-slot:item.EndFact="{ item }">
-                <span>{{localeFormat(item.EndFact)}}</span>
-            </template>
-
-
-            <template v-slot:item.TaskStatusName="{ item }">
-                <div>
-                    <v-tooltip top>
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-icon small
-                                    :style="{color: item.TaskStatus.StatusColor}"
-                                    v-bind="attrs"
-                                    v-on="on">
-                                mdi-brightness-1
-                            </v-icon>
-                        </template>
-                        <span>{{item.TaskStatusName}}</span>
-                    </v-tooltip>
-                </div>
-            </template>
-
-            <template slot="no-data">
-                <span>Записей нет</span>
-            </template>
-
-        </v-data-table>
+        <groupItem v-else-if="views.groupedByProject"
+                   :title="project.ProjectName" class="level-1" v-for="project in filtered_projects" :key="'groupItem_project_' + project.ProjectId">
+                <flatTable :items="tasks.filter(e => e.ProjectId === project.ProjectId)"
+                           :loading="loadings.firstLoad"
+                           :excludeHeaders="['ProjectName']"
+                           @select="editItem"></flatTable>
+        </groupItem>
 
         <v-snackbar v-model="snackbar">
             {{ errorMessage }}
@@ -359,7 +360,12 @@
 </template>
 
 <script>
+
+    import { localeDateFormat, ISODateFormat } from '../../helpers/date-helpers'
+
     import datePicker from './date-picker.vue'
+    import flatTable from './flat-table.vue'
+    import groupItem from './group-item.vue'
 
     const taskTemplate = {
         ProjectTaskId: 0,
@@ -378,7 +384,7 @@
         Users: [],
         EffectBeforeHours: 0,
         EffectAfterHours: 0,
-        BlockName: '',
+        BlockId: '',
     };
 
     export default {
@@ -399,23 +405,7 @@
                 statuses: [],
                 taskTypes: [],
                 users: [],
-                headers: [
-                    { text: '', value: 'TaskStatusName', width: '30px', sortable: false },
-                    { text: '', value: 'TaskTypeName', width: '40px' },
-
-                    { text: 'Проект', value: 'ProjectName', filterable: true },
-                    { text: 'Описание работы', value: 'Details' },
-
-                    { text: 'Начало план', value: 'StartPlan', width: '145px' },
-                    { text: 'Окончание план', value: 'EndPlan', width: '145px' },
-                    { text: 'Начало факт', value: 'StartFact', width: '145px' },
-                    { text: 'Окончание факт', value: 'EndFact', width: '145px' },
-
-                    { text: 'Исполнитель', value: 'Performers' },
-
-                    { text: 'Группа', value: 'GroupName', width: '145px' },
-                    //{ text: '', value: 'actions', sortable: false, width: '100px' },
-                ],
+                blocks: [],
                 editedIndex: -1,
                 editedItem: Object.assign({}, taskTemplate),
                 loadings: {
@@ -433,18 +423,17 @@
                     myTask: true,
                     week: false
                 },
+                views: {
+                    table: true,
+                    groupedByGroup: false,
+                    groupedByProject: false
+                },
                 search: '',
-                blocks: ['ПИР', 'СИПОЭ'],
                 api: '/api/projectTasks'
             }
         },
         created() {
             this.loadItems();
-        },
-        watch: {
-            dialog(val) {
-                val || this.close()
-            },
         },
         computed: {
             tasks() {
@@ -482,7 +471,7 @@
                                 return false;
                             }
                         }
-                        
+
 
                         if (dStart !== null && dEnd !== null)
                             pass = (dStart <= firstday && dEnd >= firstday) || (dStart >= firstday && dStart <= lastday) || (dStart <= firstday && dEnd <= firstday);
@@ -524,6 +513,28 @@
                 items = items.filter(e => this.searchItem(e));
 
                 this.countItems = items.length;
+
+                return items;
+            },
+            filtered_groups() {
+
+                let items = this.groups;
+                let filters = this.filters.groups;
+
+                if (filters.length !== 0) {
+                    items = items.filter(e => filters.indexOf(e.GroupId) !== -1);
+                }
+
+                return items;
+            },
+            filtered_projects() {
+
+                let items = this.projects;
+                let filters = this.filters.projects;
+
+                if (filters.length !== 0) {
+                    items = items.filter(e => filters.indexOf(e.ProjectId) !== -1);
+                }
 
                 return items;
             },
@@ -569,15 +580,13 @@
                 await this.fetchData(uri, (data) => {
                     self.items = data.map(e => {
 
-                        if (e.Users !== null)
-                            e.Users = e.Users.split(',').map(s => parseInt(s, 0));
+                        e.Users = e.PerformerIds;
 
                         return e;
                     });
 
                     self.loadings.users = false;
                 });
-
             },
             async loadItems() {
 
@@ -596,7 +605,7 @@
                 await this.fetchData('/api/projectTaskStatuses', (data) => {
                     self.statuses = data;
                     // фильтр по умолчанию - В работе и В обработке
-                    self.filters.status = [2,3];
+                    self.filters.status = [2, 3];
                 });
 
                 await this.fetchData('/api/users', (data) => {
@@ -607,13 +616,49 @@
                     self.taskTypes = self.sortArray(data, 'TaskTypeName', 'string');
                 });
 
+                await this.fetchData('/api/blocks', (data) => {
+                    self.blocks = self.sortArray(data, 'BlockName', 'string');
+                });
+
                 await this.loadTasks();
 
                 this.loadings.firstLoad = false;
+
+                await this.openTaskFromRoute();
+            },
+            async openTaskFromRoute() {
+                let self = this;
+
+                let taskId = parseInt(this.$route.params.task_id, 0);
+
+                // открываем карточку указанной задачи
+                if (taskId > 0) {
+                    let selectedItems = this.items.filter(e => e.ProjectTaskId === taskId);
+
+                    if (selectedItems.length > 0)
+                        this.editItem(selectedItems[0]);
+                    else {
+                        // в текущем списке нет задачи...запрашиваем с серва?
+                        let uri = this.api + '/' + taskId;
+                        await this.fetchData(uri, (data) => {
+
+                            data.Users = data.PerformerIds;
+
+                            self.editedItem = data;
+                            self.editedIndex = -2;
+                            this.dialog = true;
+                        });
+                    }
+                }
             },
             editItem(item) {
+
                 this.editedIndex = this.items.indexOf(item);
                 this.editedItem = Object.assign({}, item);
+
+                if (parseInt(this.$route.params.task_id, 0) !== this.editedItem.ProjectTaskId)
+                    this.$router.replace({ name: "project-task", params: { task_id: this.editedItem.ProjectTaskId }, query: {  } })
+
                 this.dialog = true;
             },
             async deleteItem() {
@@ -630,8 +675,10 @@
                     .then(async (response) => {
 
                         if (response.ok) {
-                            let index = this.items.indexOf(item);
-                            this.items.splice(index, 1);
+
+                            if (this.editedIndex !== -2 && this.editedIndex > -1)
+                                this.items.splice(this.editedIndex, 1);
+
                             this.close();
                         }
                         else {
@@ -648,10 +695,12 @@
                     });
             },
             close() {
-                this.dialog = false
+                this.dialog = false;
+
                 this.$nextTick(() => {
-                    this.editedItem = Object.assign({}, taskTemplate)
-                    this.editedIndex = -1
+                    this.editedItem = Object.assign({}, taskTemplate);
+                    this.editedIndex = -1;
+                    this.$router.push({ name: "project-tasks" });
                 })
             },
             async save() {
@@ -668,11 +717,11 @@
                 formData.append('TaskTypeId', this.editedItem.TaskTypeId);
                 formData.append('GroupId', this.editedItem.GroupId);
 
-                formData.append('StartPlan', this.toISOString(this.editedItem.StartPlan));
-                formData.append('StartFact', this.toISOString(this.editedItem.StartFact));
+                formData.append('StartPlan', ISODateFormat(this.editedItem.StartPlan));
+                formData.append('StartFact', ISODateFormat(this.editedItem.StartFact));
 
-                formData.append('EndPlan', this.toISOString(this.editedItem.EndPlan));
-                formData.append('EndFact', this.toISOString(this.editedItem.EndFact));
+                formData.append('EndPlan', ISODateFormat(this.editedItem.EndPlan));
+                formData.append('EndFact', ISODateFormat(this.editedItem.EndFact));
 
                 formData.append('Details', this.editedItem.Details);
                 formData.append('Note', this.editedItem.Note);
@@ -681,11 +730,11 @@
 
                 formData.append('Users', this.editedItem.Users);
 
-                formData.append('BlockName', this.editedItem.BlockName);
+                formData.append('BlockId', this.editedItem.BlockId !== undefined ? this.editedItem.BlockId : 0);
                 formData.append('EffectAfterHours', this.editedItem.EffectAfterHours);
                 formData.append('EffectBeforeHours', this.editedItem.EffectBeforeHours);
 
-                if (this.editedIndex > -1) {
+                if (this.editedIndex > -1 || this.editedIndex == -2 ) {
                     method = 'PUT';
                     formData.append('ProjectTaskId', this.editedItem.ProjectTaskId);
                 }
@@ -708,7 +757,7 @@
 
                             if (this.editedIndex > -1)
                                 Object.assign(self.items[this.editedIndex], item);
-                            else
+                            else if(this.editedIndex !== -2)
                                 self.items.push(item);
 
                             needClose = true;
@@ -729,30 +778,20 @@
                 this.snackbar = false;
                 this.errorMessage = '';
             },
-            toISOString(v) {
-                if (v == undefined || v == null || v === '')
-                    return '';
 
-                return new Date(Date.parse(v)).toISOString();
+            tasksByUserId(userId) {
+                return this.tasks.filter(e => e.PerformerIds.indexOf(userId));
             },
-            abbreviation(t) {
-                return t.split(' ').map(e => e[0]).join('').toUpperCase();
-            },
+
             getDetailsString(label, login, dateChanged) {
 
                 if (login !== null)
-                    return label + this.localeFormat(dateChanged) + ' (' + login + ')';
+                    return label + localeDateFormat(dateChanged) + ' (' + login + ')';
                 else
                     return label + ' - нет информации';
 
             },
-            localeFormat(d) {
-
-                if (d === undefined || d === null || d === '')
-                    return '';
-
-                return new Date(Date.parse(d)).toLocaleDateString();
-            },
+            
             searchItem(e) {
 
                 if (this.search === null || this.search === '' || this.search.length < 2)
@@ -772,29 +811,6 @@
 
                 return false;
             },
-            customSort(items, index, isDesc) {
-
-                if (index[0] === undefined)
-                    return items;
-
-                items.sort((a, b) => {
-                    if (["StartPlan", "EndPlan", "StartFact", "EndFact"].indexOf(index[0]) > -1) {
-                        if (!isDesc[0]) {
-                            return ('' + a[index[0]]).localeCompare(b[index[0]]);
-                        } else {
-                            return ('' + b[index[0]]).localeCompare(a[index[0]]);
-                        }
-                    } else {
-                        if (!isDesc[0]) {
-                            return a[index[0]] < b[index[0]] ? -1 : 1;
-                        } else {
-                            return b[index[0]] < a[index[0]] ? -1 : 1;
-                        }
-                    }
-                });
-
-                return items;
-            },
             sortArray(items, fieldName, fieldType) {
                 items.sort((a, b) => {
                     if (fieldType === 'number')
@@ -805,21 +821,7 @@
 
                 return items;
             },
-            rowClass(e) {
 
-                if (e.EndPlan === null || e.EndFact !== null)
-                    return;
-
-                let dNow = Date.now();
-                let dEnd = new Date(e.EndPlan).getTime();
-
-                if (dEnd < dNow)
-                    return 'red lighten-4';
-
-            },
-            onRowClick(e) {
-                this.editItem(e);
-            },
             onChangeMyTask() {
                 this.filters.myTask = !this.filters.myTask;
                 this.loadTasks();
@@ -831,9 +833,15 @@
                 if (e !== '')
                     this.editedItem.ProjectTaskStatusId = this.constants.statusEndIndex;
             },
+            onChangeView(e) {
+                Object.keys(this.views).map(v => this.views[v] = false);
+                this.views[e] = true;
+            },
         },
         components: {
-            datePicker
+            datePicker,
+            flatTable,
+            groupItem
         }
     };
 </script>
@@ -841,9 +849,9 @@
 <style>
 
     .font-small textarea {
-        font-size:14px;
-        line-height:16px !important;
-        padding-top:.5rem;
+        font-size: 14px;
+        line-height: 16px !important;
+        padding-top: .5rem;
     }
 
     .col {
@@ -854,16 +862,9 @@
         height: 48px;
     }
 
-    .table-tasks .v-data-table-header th {
-        padding: 0 10px !important;
-    }
-
-    .table-tasks tbody td {
-        cursor:pointer;
-    }
-
     .card-body {
-        padding-bottom:0px !important;
+        padding-bottom: 0px !important;
     }
+
 
 </style>
