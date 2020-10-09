@@ -174,7 +174,7 @@
 
                             <v-row>
                                 <v-col>
-                                    <datePicker v-model="editedItem.StartFact" label="Фактическое начало"></datePicker>
+                                    <datePicker v-model="editedItem.StartFact" label="Фактическое начало" v-on:input="onChangeStartFact"></datePicker>
                                 </v-col>
                                 <v-col>
                                     <datePicker v-model="editedItem.EndFact" label="Фактическое окончание" v-on:input="onChangeEndFact"></datePicker>
@@ -323,14 +323,14 @@
 
         <flatTable v-if="views.table"
                    :items="tasks"
-                   :loading="loadings.firstLoad"
+                   :loading="loadings.firstLoad || loadings.items"
                    @select="editItem"></flatTable>
 
         <groupItem v-else-if="views.groupedByGroup"
                    :title="group.GroupName" class="level-1" v-for="group in filtered_groups" :key="'groupItem_group_' + group.GroupId">
             <groupItem :title="user.ShortName" class="level-2" v-for="user in users.filter(e => e.GroupId === group.GroupId)" :key="'groupItem_user_' + user.UserId">
                 <flatTable :items="tasks.filter(e => e.PerformerIds.indexOf(user.UserId) !== -1)"
-                           :loading="loadings.firstLoad"
+                           :loading="loadings.firstLoad || loadings.items"
                            :excludeHeaders="['GroupName', 'Performers']"
                            @select="editItem"></flatTable>
             </groupItem>
@@ -339,7 +339,7 @@
         <groupItem v-else-if="views.groupedByProject"
                    :title="project.ProjectName" class="level-1" v-for="project in filtered_projects" :key="'groupItem_project_' + project.ProjectId">
                 <flatTable :items="tasks.filter(e => e.ProjectId === project.ProjectId)"
-                           :loading="loadings.firstLoad"
+                           :loading="loadings.firstLoad || loadings.items"
                            :excludeHeaders="['ProjectName']"
                            @select="editItem"></flatTable>
         </groupItem>
@@ -392,7 +392,7 @@
             return {
                 title: 'Задачи',
                 constants: {
-                    statusInWorkIndex: 3,
+                    statusInWorkIndex: 2,
                     statusEndIndex: 4,
                 },
                 dialog: false,
@@ -568,9 +568,11 @@
                     });
             },
             async loadTasks() {
-                let self = this;
-                this.loadings.users = true;
 
+                this.loadings.items = true;
+                this.items = [];
+
+                let self = this;
                 let uri = this.api;
 
                 if (this.filters.myTask) {
@@ -585,8 +587,10 @@
                         return e;
                     });
 
-                    self.loadings.users = false;
                 });
+
+                self.loadings.items = false;
+
             },
             async loadItems() {
 
@@ -698,9 +702,12 @@
                 this.dialog = false;
 
                 this.$nextTick(() => {
+
+                    if (this.editedIndex !== -1)
+                        this.$router.push({ name: "project-tasks" });
+
                     this.editedItem = Object.assign({}, taskTemplate);
                     this.editedIndex = -1;
-                    this.$router.push({ name: "project-tasks" });
                 })
             },
             async save() {
@@ -728,7 +735,10 @@
                 formData.append('DurationHours', this.editedItem.DurationHours);
                 formData.append('Priority', this.editedItem.Priority);
 
-                formData.append('Users', this.editedItem.Users);
+                // костыль какой-то?
+                let users = this.editedItem.Users.filter(e => !isNaN(e));
+
+                formData.append('Users', users);
 
                 formData.append('BlockId', this.editedItem.BlockId !== undefined ? this.editedItem.BlockId : 0);
                 formData.append('EffectAfterHours', this.editedItem.EffectAfterHours);
@@ -828,6 +838,10 @@
             },
             onChangeFilterWeek() {
                 this.filters.week = !this.filters.week;
+            },
+            onChangeStartFact(e) {
+                if (e !== '')
+                    this.editedItem.ProjectTaskStatusId = this.constants.statusInWorkIndex;
             },
             onChangeEndFact(e) {
                 if (e !== '')
