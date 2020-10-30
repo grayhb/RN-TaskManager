@@ -18,6 +18,8 @@ namespace RN_TaskManager.Models
         public string FirstName { get; set; }
         public string Patronymic { get; set; }
 
+        public string Email { get; set; }
+
         [ForeignKey("Group")]
         public int? GroupId { get; set; }
         public Group Group { get; set; }

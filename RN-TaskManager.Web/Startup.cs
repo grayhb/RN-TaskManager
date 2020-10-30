@@ -10,6 +10,7 @@ using Microsoft.Extensions.Hosting;
 using RN_TaskManager.DAL.Context;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Web.AutoMapperProfiles;
+using RN_TaskManager.Web.HostedServices;
 using RN_TaskManager.Web.Services;
 using System.Security.Claims;
 
@@ -71,6 +72,7 @@ namespace RN_TaskManager.Web
             services.AddScoped<ITaskTypeRepository, TaskTypeRepository>();
             services.AddScoped<IProjectTaskPerformerRepository, ProjectTaskPerformerRepository>();
             services.AddScoped<IBlockRepository, BlockRepository>();
+            services.AddScoped<IMailRepository, MailRepository>();
 
             #endregion
 
@@ -80,7 +82,11 @@ namespace RN_TaskManager.Web
 
             #endregion
 
+            #region Hosted Services
 
+            services.AddHostedService<MailHostedService>();
+
+            #endregion
 
             services.AddAutoMapper(typeof(TaskManagerAutoMapperProfile));
 

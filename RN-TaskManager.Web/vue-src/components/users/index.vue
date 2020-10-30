@@ -25,6 +25,7 @@
                             <v-row>
                                 <v-col cols="12">
                                     <v-text-field v-model="editedItem.Login" label="Логин"></v-text-field>
+                                    <v-text-field v-model="editedItem.Email" label="Email"></v-text-field>
                                     <v-text-field v-model="editedItem.LastName" label="Фамилия"></v-text-field>
                                     <v-text-field v-model="editedItem.FirstName" label="Имя"></v-text-field>
                                     <v-text-field v-model="editedItem.Patronymic" label="Отчество"></v-text-field>
@@ -89,6 +90,7 @@
             groups: [],
             headers: [
                 { text: 'Логин', value: 'Login' },
+                { text: 'Email', value: 'Email' },
                 { text: 'ФИО', value: 'ShortName' },
                 { text: 'Группа', value: 'GroupName' },
             ],
@@ -99,6 +101,7 @@
                 LastName: '',
                 FirstName: '',
                 Patronymic: '',
+                Email: '',
                 GroupId: -1
             },
             defaultItem: {
@@ -107,6 +110,7 @@
                 LastName: '',
                 FirstName: '',
                 Patronymic: '',
+                Email: '',
                 GroupId: -1
             },
             loading: false,
@@ -218,6 +222,7 @@
                 formData.append('LastName', this.editedItem.LastName);
                 formData.append('FirstName', this.editedItem.FirstName);
                 formData.append('Patronymic', this.editedItem.Patronymic);
+                formData.append('Email', this.editedItem.Email);
                 formData.append('GroupId', this.editedItem.GroupId);
 
                 // TODO - создание / изменение

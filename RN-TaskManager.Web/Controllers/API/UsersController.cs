@@ -99,6 +99,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 existItem.FirstName = item.FirstName;
                 existItem.LastName = item.LastName;
                 existItem.Patronymic = item.Patronymic;
+                existItem.Email = item.Email;
 
                 // получение группы если она есть
                 if (item.GroupId != null && item.GroupId > 0)
