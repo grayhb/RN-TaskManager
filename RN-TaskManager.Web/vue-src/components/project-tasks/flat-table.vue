@@ -47,12 +47,24 @@
                 <div>
                     <v-tooltip top>
                         <template v-slot:activator="{ on, attrs }">
-                            <v-icon small
+
+                            <v-icon v-if="item.Important"
+                                    small
+                                    :style="{color: item.TaskStatus.StatusColor}"
+                                    v-bind="attrs"
+                                    v-on="on">
+                                mdi-key
+                            </v-icon>
+
+                            <v-icon v-else
+                                    small
                                     :style="{color: item.TaskStatus.StatusColor}"
                                     v-bind="attrs"
                                     v-on="on">
                                 mdi-brightness-1
                             </v-icon>
+
+
                         </template>
                         <span>{{item.TaskStatusName}}</span>
                     </v-tooltip>

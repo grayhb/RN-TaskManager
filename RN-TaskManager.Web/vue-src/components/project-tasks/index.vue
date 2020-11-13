@@ -8,7 +8,15 @@
                        inset
                        vertical></v-divider>
 
-            <v-btn @click="onChangeMyTask" class="" small>
+            <v-btn @click="onChangeFilterImportant"  title="Показать только ключевые задачи" small>
+                <v-icon small
+                        :color="filters.important ? 'green' : 'grey'"
+                        >
+                    mdi-key
+                </v-icon>
+            </v-btn>
+
+            <v-btn @click="onChangeMyTask" class="ml-2" small>
                 <v-icon small
                         :color="filters.myTask ? 'green' : 'grey'"
                         class="mr-2">
@@ -57,6 +65,7 @@
                 Проект
             </v-btn>
 
+
             <v-spacer></v-spacer>
 
             <v-dialog v-model="dialog" max-width="800px" persistent>
@@ -94,6 +103,13 @@
 
                     <v-card-text class="card-body">
                         <v-container>
+                            <v-row>
+                                <v-col>
+                                    <v-checkbox v-model="editedItem.Important"
+                                                dense
+                                                label="Ключевая задача"></v-checkbox>
+                                </v-col>
+                            </v-row>
                             <v-row>
                                 <v-col cols="12">
                                     <v-textarea single-line label="Описание работы" v-model="editedItem.Details" rows="3" dense></v-textarea>
@@ -198,6 +214,8 @@
                             </v-row>
 
                             <v-row>
+
+
                                 <v-col>
                                     <v-select v-model="editedItem.BlockId"
                                               :items="blocks"
@@ -209,15 +227,6 @@
                                 </v-col>
 
                                 <v-col>
-                                    <v-text-field v-model="editedItem.EffectBeforeHours"
-                                                  label="Трудоемкость до автоматизации"
-                                                  type="number"
-                                                  dense
-                                                  :rules="[e => e >= 0 ]">
-                                    </v-text-field>
-                                </v-col>
-
-                                <v-col>
                                     <v-text-field v-model="editedItem.EffectAfterHours"
                                                   label="Трудоемкость после автоматизации"
                                                   type="number"
@@ -225,8 +234,11 @@
                                                   :rules="[e => e >= 0 ]">
                                     </v-text-field>
                                 </v-col>
-                            </v-row>
 
+                                <v-col>
+
+                                </v-col>
+                            </v-row>
 
                         </v-container>
                     </v-card-text>
@@ -316,7 +328,17 @@
                 </template>
             </v-select>
 
+            <v-spacer></v-spacer>
 
+            <v-btn @click="onReport"
+                   small>
+                <v-icon small
+                        color="green"
+                        class="mr-2">
+                    mdi-file-excel-box
+                </v-icon>
+                Отчет
+            </v-btn>
         </div>
 
         <v-divider></v-divider>
@@ -385,6 +407,7 @@
         EffectBeforeHours: 0,
         EffectAfterHours: 0,
         BlockId: '',
+        Important: false,
     };
 
     export default {
@@ -421,7 +444,8 @@
                     projects: [],
                     groups: [],
                     myTask: true,
-                    week: false
+                    week: false,
+                    important: false,
                 },
                 views: {
                     table: true,
@@ -439,6 +463,10 @@
             tasks() {
 
                 let items = this.items;
+
+                // фильтр по ключевым задачам
+                if (this.filters.important)
+                    items = items.filter(e => e.Important);
 
                 // фильтр за неделю....
                 if (this.filters.week) {
@@ -744,6 +772,8 @@
                 formData.append('EffectAfterHours', this.editedItem.EffectAfterHours);
                 formData.append('EffectBeforeHours', this.editedItem.EffectBeforeHours);
 
+                formData.append('Important', this.editedItem.Important);
+
                 if (this.editedIndex > -1 || this.editedIndex == -2 ) {
                     method = 'PUT';
                     formData.append('ProjectTaskId', this.editedItem.ProjectTaskId);
@@ -839,6 +869,9 @@
             onChangeFilterWeek() {
                 this.filters.week = !this.filters.week;
             },
+            onChangeFilterImportant() {
+                this.filters.important = !this.filters.important;
+            },
             onChangeStartFact(e) {
                 if (e !== '')
                     this.editedItem.ProjectTaskStatusId = this.constants.statusInWorkIndex;
@@ -851,6 +884,15 @@
                 Object.keys(this.views).map(v => this.views[v] = false);
                 this.views[e] = true;
             },
+            onReport() {
+
+                let uri = this.api
+                    + "/report?Important=" + this.filters.important
+                    + "&myTask=" + this.filters.myTask
+                    + "&week=" + this.filters.week;
+
+                window.open(uri);
+            }
         },
         components: {
             datePicker,
@@ -878,6 +920,10 @@
 
     .card-body {
         padding-bottom: 0px !important;
+    }
+
+    .v-input--selection-controls {
+        margin-top:0;
     }
 
 

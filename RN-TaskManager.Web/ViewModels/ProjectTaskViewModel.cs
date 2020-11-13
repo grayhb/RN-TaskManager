@@ -54,10 +54,12 @@ namespace RN_TaskManager.Web.ViewModels
         public int? BlockId { get; set; }
         public Block Block { get; set; }
 
+        public bool Important { get; set; }
+
 
         public string ProjectName => Project != null ? Project.ProjectName : "";
-        public int ProjectImportance => Project != null ? Project.ProjectImportance : 0;
 
+        public int ProjectImportance => Project != null ? Project.ProjectImportance : 0;
 
         public string GroupName => Group != null ? Group.GroupName : "";
 

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient.Server;
+using Microsoft.Net.Http.Headers;
 using RN_TaskManager.DAL.Repositories;
 using RN_TaskManager.Models;
 using RN_TaskManager.Web.Services;
@@ -27,6 +29,7 @@ namespace RN_TaskManager.Web.Controllers.API
         private readonly IBlockRepository _blockRepository;
         private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
+        private readonly IExcelService _excelService;
 
         public ProjectTasksController(
             IMapper mapper,
@@ -39,7 +42,8 @@ namespace RN_TaskManager.Web.Controllers.API
             IGroupRepository groupRepository,
             IUserRepository userRepository,
             IBlockRepository blockRepository,
-            IUserService userService)
+            IUserService userService,
+            IExcelService excelService)
         {
             _mapper = mapper;
             _projectTaskRepository = projectTaskRepository;
@@ -52,6 +56,7 @@ namespace RN_TaskManager.Web.Controllers.API
             _userRepository = userRepository;
             _userService = userService;
             _blockRepository = blockRepository;
+            _excelService = excelService;
         }
 
         [HttpGet]
@@ -75,9 +80,15 @@ namespace RN_TaskManager.Web.Controllers.API
             try
             {
                 var user = _userRepository.FindAsync(e => e.Login.Equals(_userService.userLogin)).Result.FirstOrDefault();
-                var items = await _projectTaskRepository.ProjectTasksByUserIdAsync(user.UserId);
 
-                return items.Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
+                if (user != null)
+                {
+                    var items = await _projectTaskRepository.ProjectTasksByUserIdAsync(user.UserId);
+
+                    return items.Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
+                }
+
+                return NotFound();
             }
             catch (Exception ex)
             {
@@ -139,7 +150,7 @@ namespace RN_TaskManager.Web.Controllers.API
                 newItem.Group = group;
                 newItem.TaskStatus = taskStatus;
                 newItem.TaskType = taskType;
-                
+
                 if (block != null)
                     newItem.Block = block;
 
@@ -219,9 +230,11 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 existItem.StartFact = item.StartFact;
                 existItem.EndFact = item.EndFact;
-                
+
                 existItem.EffectAfterHours = item.EffectAfterHours;
-                existItem.EffectBeforeHours = item.EffectBeforeHours;
+                existItem.EffectAfterHours = item.EffectAfterHours;
+
+                existItem.Important = item.Important;
 
                 existItem.DateEdited = DateTime.Now;
 
@@ -310,6 +323,55 @@ namespace RN_TaskManager.Web.Controllers.API
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpGet("report")]
+        public async Task<IActionResult> GetReport([FromQuery] FilterViewModel filter)
+        {
+            try
+            {
+                List<ProjectTaskViewModel> items;
+
+                if (filter.MyTask)
+                {
+                    var user = _userRepository.FindAsync(e => e.Login.Equals(_userService.userLogin)).Result.FirstOrDefault();
+
+                    if (user != null)
+                        items = (await _projectTaskRepository.ProjectTasksByUserIdAsync(user.UserId))
+                            .Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
+                    else
+                        return NotFound(new { error = "Пользователь не найден" });
+                }
+                else
+                    items = (await _projectTaskRepository.ProjectTasksAsync())
+                        .Select(e => _mapper.Map<ProjectTaskViewModel>(e)).ToList();
+
+                if (filter.Important)
+                    items = items.Where(e => e.Important).ToList();
+
+
+                var filePath = await _excelService.Report(items.Cast<object>().ToList());
+
+                if (System.IO.File.Exists(filePath))
+                {
+                    var result = PhysicalFile(filePath,
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                    string nameFile = $"Отчет_управление_задачами_от_{DateTime.Now:yyyy.MM.dd HH.mm.ss}.xlsx";
+
+                    Response.Headers["Content-Disposition"] = new ContentDispositionHeaderValue("attachment")
+                    {
+                        FileName = WebUtility.UrlEncode(nameFile)
+                    }.ToString();
+
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+
+            return BadRequest(new { error = "Отчет не сформирован" });
         }
 
         async Task<Project> ProjectByIdAsync(int id) => id > 0 ? await _projectRepository.FindByIdAsync(id) : null;

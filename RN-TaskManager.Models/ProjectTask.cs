@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -67,6 +68,9 @@ namespace RN_TaskManager.Models
         [ForeignKey("Block")]
         public int? BlockId { get; set; }
         public Block Block { get; set; }
+
+        [DefaultValue(false)]
+        public bool Important { get; set; }
 
         public List<ProjectTaskPerformer> ProjectTaskPerformers { get; set; }
 

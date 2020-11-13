@@ -79,6 +79,7 @@ namespace RN_TaskManager.Web
             #region Services
 
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IExcelService, ExcelService>();
 
             #endregion
 
