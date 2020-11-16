@@ -21,14 +21,14 @@ namespace RN_TaskManager.DAL.Repositories
 
         private SmtpClient _smtp;
 
-        private string _systemName;
-        private string _systemUrl;
+        private readonly string _systemName;
+        private readonly string _systemUrl;
 
-        private string _emailHost;
-        private string _emailPort;
-        private string _emailLogin;
-        private string _emailPassword;
-        private string _emailAddress;
+        private readonly string _emailHost;
+        private readonly string _emailPort;
+        private readonly string _emailLogin;
+        private readonly string _emailPassword;
+        private readonly string _emailAddress;
 
         public MailRepository(RN_TaskManagerContext context, IConfiguration configuration, ILogger<MailRepository> logger) : base(context)
         {
@@ -92,7 +92,7 @@ namespace RN_TaskManager.DAL.Repositories
             {
                 var body = $"{user.FirstName} {user.Patronymic}!<br />";
                 body += "Вам необходимо обратить внимание на следующие просроченные задачи:<br /><br />";
-                body += "<table border=\"1\" width=\"100%\" >";
+                body += "<table border=\"1\" width=\"100%\" style=\"border - collapse: collapse; border: 1px solid #000066;\" >";
                 body += "<thead>";
                 body += "<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>";
                 body += "</thead>";
@@ -100,14 +100,19 @@ namespace RN_TaskManager.DAL.Repositories
                 body += "<tbody>";
 
                 foreach (var task in tasks
-                    .Where(e => e.ProjectTaskPerformers.Any(p => p.UserId == user.UserId && !e.Deleted))
+                    .Where(e => e.ProjectTaskPerformers.Any(p => p.UserId == user.UserId && !p.Deleted))
                     .OrderBy(e => e.EndPlan)
                     )
                 {
                     body += "<tr>";
                     body += $"<td>{task.Project.ProjectName}</td>";
                     body += $"<td>{task.Details}</td>";
-                    body += $"<td>{task.EndPlan.Value:dd.MM.yyyy}</td>";
+                    
+                    if (task.EndPlan != null) 
+                        body += $"<td>{task.EndPlan.Value:dd.MM.yyyy}</td>";
+                    else
+                        body += $"<td></td>";
+
                     body += $"<td><a href=\"{_systemUrl}/#/project-tasks/{task.ProjectTaskId}\" target=\"_blank\">открыть</a> </td>";
                     body += "</tr>";
                 }
@@ -132,7 +137,7 @@ namespace RN_TaskManager.DAL.Repositories
 
             if (newMails.Count > 0)
             {
-                _context.Mails.AddRange(newMails);
+                await _context.Mails.AddRangeAsync(newMails);
                 await _context.SaveChangesAsync();
             }
         }
@@ -169,12 +174,15 @@ namespace RN_TaskManager.DAL.Repositories
 
         private void SendMail(Mail mail)
         {
-            MailMessage Message = new MailMessage();
-            Message.From = new MailAddress(_emailAddress);
+            MailMessage Message = new MailMessage
+            {
+                From = new MailAddress(_emailAddress),
+                Subject = mail.Topic,
+                Body = mail.Body,
+                IsBodyHtml = true
+            };
+
             Message.To.Add(new MailAddress(mail.Address));
-            Message.Subject = mail.Topic;
-            Message.Body = mail.Body;
-            Message.IsBodyHtml = true;
 
             try
             {

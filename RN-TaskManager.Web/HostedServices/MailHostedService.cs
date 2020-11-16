@@ -44,15 +44,13 @@ namespace RN_TaskManager.Web.HostedServices
 
         public void DoWork(object state)
         {
-            using (var scope = _scopeFactory.CreateScope())
-            {
-                var mailRepository = scope.ServiceProvider.GetRequiredService<IMailRepository>();
+            using var scope = _scopeFactory.CreateScope();
 
-                mailRepository.CreateMailsAsync().Wait();
+            var mailRepository = scope.ServiceProvider.GetRequiredService<IMailRepository>();
 
-                mailRepository.SendMails().Wait();
+            mailRepository.CreateMailsAsync().Wait();
 
-            }
+            mailRepository.SendMails().Wait();
         }
     }
 }
