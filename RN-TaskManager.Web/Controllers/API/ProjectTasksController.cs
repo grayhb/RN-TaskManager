@@ -350,7 +350,7 @@ namespace RN_TaskManager.Web.Controllers.API
                     items = items.Where(e => e.Important).ToList();
 
 
-                var filePath = await _excelService.Report(items.Cast<object>().ToList());
+                var filePath = _excelService.Report(items.Cast<object>().ToList());
 
                 if (System.IO.File.Exists(filePath))
                 {

@@ -331,6 +331,7 @@
             <v-spacer></v-spacer>
 
             <v-btn @click="onReport"
+                   class="mt-1"
                    small>
                 <v-icon small
                         color="green"

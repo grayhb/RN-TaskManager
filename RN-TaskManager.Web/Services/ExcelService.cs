@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 using NPOI.SS.UserModel;
 using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
@@ -12,7 +11,7 @@ namespace RN_TaskManager.Web.Services
     public class ExcelService : IExcelService
     {
 
-        public async Task<string> Report(List<object> items)
+        public string Report(List<object> items)
         {
             List<ReportItemView> fields = new List<ReportItemView>();
 
@@ -84,6 +83,27 @@ namespace RN_TaskManager.Web.Services
             {
                 Name = nameof(tmp.GroupName),
                 Title = "Группа"
+            });
+
+            fields.Add(new ReportItemView()
+            {
+                Name = nameof(tmp.Note),
+                Title = "Комментарий исполнителя",
+                Align = "Left",
+                Width = 15000
+            });
+
+            fields.Add(new ReportItemView()
+            {
+                Name = nameof(tmp.BlockName),
+                Title = "Блок"
+            });
+
+            fields.Add(new ReportItemView()
+            {
+                Name = nameof(tmp.EffectAfterHours),
+                Title = "Трудоемкость после автоматизации",
+                Type = typeof(double)
             });
 
             return CreateReport("Отчет по задачам", items, fields);
