@@ -92,7 +92,7 @@ namespace RN_TaskManager.DAL.Repositories
             {
                 var body = $"{user.FirstName} {user.Patronymic}!<br />";
                 body += "Вам необходимо обратить внимание на следующие просроченные задачи:<br /><br />";
-                body += "<table border=\"1\" width=\"100%\" style=\"border - collapse: collapse; border: 1px solid #000066;\" >";
+                body += "<table border=\"1\" width=\"100%\" style=\"border-collapse: collapse; border: 1px solid #000066;\" >";
                 body += "<thead>";
                 body += "<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>";
                 body += "</thead>";

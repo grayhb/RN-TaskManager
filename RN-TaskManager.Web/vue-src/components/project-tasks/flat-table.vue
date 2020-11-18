@@ -71,6 +71,28 @@
                 </div>
             </template>
 
+            <template v-slot:item.Note="{ item }">
+                <div>
+                    <v-tooltip 
+                               max-width="400"
+                               nudge-left="1"
+                               left
+                               >
+                        <template v-slot:activator="{ on, attrs }">
+
+                            <v-icon v-if="item.Note != ''"
+                                    small
+                                    color="grey"
+                                    v-bind="attrs"
+                                    v-on="on">
+                                mdi-comment-outline
+                            </v-icon>
+
+                        </template>
+                        <span>{{item.Note}}</span>
+                    </v-tooltip>
+                </div>
+            </template>
             <template slot="no-data">
                 <span>Записей нет</span>
             </template>
@@ -100,7 +122,7 @@
                     { text: '', value: 'TaskStatusName', width: '30px', sortable: false },
                     { text: '', value: 'TaskTypeName', width: '40px' },
 
-                    { text: 'Проект', value: 'ProjectName', filterable: true },
+                    { text: 'Проект', value: 'ProjectName' },
                     { text: 'Описание работы', value: 'Details' },
 
                     { text: 'Начало план', value: 'StartPlan', width: '145px' },
@@ -111,6 +133,7 @@
                     { text: 'Исполнитель', value: 'Performers' },
 
                     { text: 'Группа', value: 'GroupName', width: '145px' },
+                    { text: '', value: 'Note', width: '30px', sortable: false  },
                 ],
             }
         },
