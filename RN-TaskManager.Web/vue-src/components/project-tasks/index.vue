@@ -477,7 +477,7 @@
                     var last = first + 6;
 
                     var firstday = new Date(currentDate.setDate(first)).getTime();
-                    var lastday = new Date(currentDate.setDate(last)).getTime();
+                    var lastday = new Date(currentDate.setDate(currentDate.getDate() + last)).getTime();
 
                     items = items.filter(e => {
 
@@ -501,9 +501,10 @@
                             }
                         }
 
-
                         if (dStart !== null && dEnd !== null)
-                            pass = (dStart <= firstday && dEnd >= firstday) || (dStart >= firstday && dStart <= lastday) || (dStart <= firstday && dEnd <= firstday);
+                            pass = (dStart <= firstday && dEnd >= firstday)
+                                || (dStart >= firstday && dStart <= lastday)
+                                || (dStart <= firstday && dEnd <= firstday);
 
                         return pass;
                     });
