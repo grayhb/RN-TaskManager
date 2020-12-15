@@ -45,6 +45,46 @@ namespace RN_TaskManager.DAL.Repositories
             _emailAddress = configuration["Email:Address"];
         }
 
+        /// <summary>
+        /// Создание письма о новой задаче для пользователя
+        /// </summary>
+        public async Task CreateTaskMailAsync(User user, ProjectTask projectTask)
+        {
+            if (projectTask == null || user == null)
+                return;
+
+            var body = $"{user.FirstName} {user.Patronymic}!<br />" +
+                $"Для Вас назначена новая задача:<br /><br />" +
+                $"<table border=\"1\" width=\"100%\" style=\"border-collapse: collapse; border: 1px solid #000066;\" >" +
+                    $"<thead>" +
+                        $"<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>" +
+                    $"</thead>" +
+                    $"<tbody>" +
+                        $"<tr>" +
+                            $"<td>{projectTask.Project.ProjectName}</td>" +
+                            $"<td>{projectTask.Details}</td>" +
+                            (projectTask.EndPlan != null ? $"<td>{projectTask.EndPlan.Value:dd.MM.yyyy}</td>" : $"<td></td>") +
+                            $"<td><a href=\"{_systemUrl}/#/project-tasks/{projectTask.ProjectTaskId}\" target=\"_blank\">открыть</a> </td>" +
+                        $"</tr>" +
+                    $"</tbody>" +
+                $"</table>" +
+                $"<br /><br /><i>Это письмо создано автоматически, отвечать на него не нужно.</i> <br />- - -<br />" +
+                $"<a href=\"{_systemUrl}\" target=\"_blank\"><b>{_systemName}</b></a>";
+
+            body = $"<font size=\"3\" color=\"#000066\" face=\"Trebuchet MS, Tahoma\">{body}</font>";
+
+            var newMail = new Mail()
+            {
+                Topic = $"Новое задание №{projectTask.ProjectId}",
+                Body = body,
+                DateCreate = DateTime.Now,
+                Address = user.Email,
+            };
+
+            await _context.Mails.AddAsync(newMail);
+            await _context.SaveChangesAsync();
+        }
+
         public async Task CreateMailsAsync()
         {
             var lastItem = await _context.Mails.OrderByDescending(e => e.DateCreate).FirstOrDefaultAsync();
@@ -107,8 +147,8 @@ namespace RN_TaskManager.DAL.Repositories
                     body += "<tr>";
                     body += $"<td>{task.Project.ProjectName}</td>";
                     body += $"<td>{task.Details}</td>";
-                    
-                    if (task.EndPlan != null) 
+
+                    if (task.EndPlan != null)
                         body += $"<td>{task.EndPlan.Value:dd.MM.yyyy}</td>";
                     else
                         body += $"<td></td>";
@@ -142,7 +182,8 @@ namespace RN_TaskManager.DAL.Repositories
             }
         }
 
-        public async Task SendMails() {
+        public async Task SendMails()
+        {
             var items = await _context.Mails.Where(e => e.DateSend == null).ToListAsync();
 
             if (items.Count == 0)
@@ -150,7 +191,7 @@ namespace RN_TaskManager.DAL.Repositories
 
             InitSmtp();
 
-            foreach(var item in items)
+            foreach (var item in items)
             {
                 SendMail(item);
             }

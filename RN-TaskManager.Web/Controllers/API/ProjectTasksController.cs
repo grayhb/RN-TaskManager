@@ -30,6 +30,7 @@ namespace RN_TaskManager.Web.Controllers.API
         private readonly IUserRepository _userRepository;
         private readonly IUserService _userService;
         private readonly IExcelService _excelService;
+        private readonly IMailRepository _mailRepository;
 
         public ProjectTasksController(
             IMapper mapper,
@@ -43,8 +44,9 @@ namespace RN_TaskManager.Web.Controllers.API
             IUserRepository userRepository,
             IBlockRepository blockRepository,
             IUserService userService,
+            IMailRepository mailRepository,
             IExcelService excelService)
-        {
+            {
             _mapper = mapper;
             _projectTaskRepository = projectTaskRepository;
             _projectRepository = projectRepository;
@@ -57,7 +59,8 @@ namespace RN_TaskManager.Web.Controllers.API
             _userService = userService;
             _blockRepository = blockRepository;
             _excelService = excelService;
-        }
+            _mailRepository = mailRepository;
+            }
 
         [HttpGet]
         public async Task<ActionResult<List<ProjectTaskViewModel>>> GetItems()
@@ -267,6 +270,8 @@ namespace RN_TaskManager.Web.Controllers.API
                                 {
                                     User = user
                                 });
+                                //тут - для новых пользователей создается почтовое уведомление о задаче
+                                await _mailRepository.CreateTaskMailAsync(user, existItem);
                             }
                         }
                     }

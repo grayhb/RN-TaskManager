@@ -7,5 +7,11 @@ namespace RN_TaskManager.DAL.Repositories
     {
         Task CreateMailsAsync();
         Task SendMails();
+
+        /// <summary>
+        /// Создание письма о новой задаче для пользователя
+        /// </summary>
+        Task CreateTaskMailAsync(User user, ProjectTask projectTask);
+
     }
 }
