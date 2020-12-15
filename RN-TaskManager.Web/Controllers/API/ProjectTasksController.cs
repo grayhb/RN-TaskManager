@@ -179,6 +179,9 @@ namespace RN_TaskManager.Web.Controllers.API
 
                 await _projectTaskRepository.CreateAsync(newItem);
 
+                // формируем почтовые уведомления
+                await _mailRepository.CreateMailsForNewPerformersAsync(newItem.ProjectTaskPerformers.Select(e => e.User).ToList(), newItem);
+
                 return _mapper.Map<ProjectTaskViewModel>(newItem);
             }
             catch (Exception ex)
@@ -244,10 +247,11 @@ namespace RN_TaskManager.Web.Controllers.API
                 var userEdited = (await _userRepository.FindAsync(e => !e.Deleted && e.Login.ToLower().Equals(_userService.userLogin.ToLower()))).SingleOrDefault();
                 existItem.LoginEdited = userEdited != null ? userEdited.ShortName : _userService.userLogin;
 
+                var newPerformers = new List<User>();
+
                 if (!string.IsNullOrEmpty(item.Users))
                 {
-                    if (existItem.ProjectTaskPerformers == null)
-                        existItem.ProjectTaskPerformers = new List<ProjectTaskPerformer>();
+                    existItem.ProjectTaskPerformers ??= new List<ProjectTaskPerformer>();
 
                     var userIds = item.Users.Split(",").Select(e => int.Parse(e)).ToList();
 
@@ -270,8 +274,9 @@ namespace RN_TaskManager.Web.Controllers.API
                                 {
                                     User = user
                                 });
-                                //тут - для новых пользователей создается почтовое уведомление о задаче
-                                await _mailRepository.CreateTaskMailAsync(user, existItem);
+
+                                newPerformers.Add(user);
+
                             }
                         }
                     }
@@ -284,6 +289,9 @@ namespace RN_TaskManager.Web.Controllers.API
                 }
 
                 await _projectTaskRepository.EditAsync(existItem);
+
+                //тут - для новых пользователей создается почтовое уведомление о задаче
+                await _mailRepository.CreateMailsForNewPerformersAsync(newPerformers, existItem);
 
                 return _mapper.Map<ProjectTaskViewModel>(existItem);
             }
@@ -388,6 +396,5 @@ namespace RN_TaskManager.Web.Controllers.API
         async Task<ProjectTaskStatus> ProjectTaskStatusByIdAsync(int? id) => id > 0 ? await _projectTaskStatusRepository.FindByIdAsync(id.Value) : null;
 
         async Task<Block> BlockByIdAsync(int? id) => id > 0 ? await _blockRepository.FindByIdAsync(id.Value) : null;
-
     }
 }

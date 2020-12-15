@@ -48,40 +48,26 @@ namespace RN_TaskManager.DAL.Repositories
         /// <summary>
         /// Создание письма о новой задаче для пользователя
         /// </summary>
-        public async Task CreateTaskMailAsync(User user, ProjectTask projectTask)
+        public async Task CreateMailForNewPerformerAsync(User user, ProjectTask projectTask)
         {
             if (projectTask == null || user == null)
                 return;
 
-            var body = $"{user.FirstName} {user.Patronymic}!<br />" +
-                $"Для Вас назначена новая задача:<br /><br />" +
-                $"<table border=\"1\" width=\"100%\" style=\"border-collapse: collapse; border: 1px solid #000066;\" >" +
-                    $"<thead>" +
-                        $"<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>" +
-                    $"</thead>" +
-                    $"<tbody>" +
-                        $"<tr>" +
-                            $"<td>{projectTask.Project.ProjectName}</td>" +
-                            $"<td>{projectTask.Details}</td>" +
-                            (projectTask.EndPlan != null ? $"<td>{projectTask.EndPlan.Value:dd.MM.yyyy}</td>" : $"<td></td>") +
-                            $"<td><a href=\"{_systemUrl}/#/project-tasks/{projectTask.ProjectTaskId}\" target=\"_blank\">открыть</a> </td>" +
-                        $"</tr>" +
-                    $"</tbody>" +
-                $"</table>" +
-                $"<br /><br /><i>Это письмо создано автоматически, отвечать на него не нужно.</i> <br />- - -<br />" +
-                $"<a href=\"{_systemUrl}\" target=\"_blank\"><b>{_systemName}</b></a>";
+            await _context.Mails.AddAsync(GetMailForPerformer(user, projectTask));
+            await _context.SaveChangesAsync();
+        }
 
-            body = $"<font size=\"3\" color=\"#000066\" face=\"Trebuchet MS, Tahoma\">{body}</font>";
+        public async Task CreateMailsForNewPerformersAsync(List<User> users, ProjectTask projectTask)
+        {
+            if (projectTask == null || users.Count == 0)
+                return;
 
-            var newMail = new Mail()
-            {
-                Topic = $"Новое задание №{projectTask.ProjectId}",
-                Body = body,
-                DateCreate = DateTime.Now,
-                Address = user.Email,
-            };
+            var mails = new List<Mail>();
 
-            await _context.Mails.AddAsync(newMail);
+            foreach (var user in users)
+                mails.Add(GetMailForPerformer(user, projectTask));
+
+            await _context.Mails.AddRangeAsync(mails);
             await _context.SaveChangesAsync();
         }
 
@@ -127,53 +113,9 @@ namespace RN_TaskManager.DAL.Repositories
 
             var newMails = new List<Mail>();
 
-            // формируем письмо для пользователя
+            // формируем письма для пользователей
             foreach (var user in users.Where(e => !string.IsNullOrEmpty(e.Email)))
-            {
-                var body = $"{user.FirstName} {user.Patronymic}!<br />";
-                body += "Вам необходимо обратить внимание на следующие просроченные задачи:<br /><br />";
-                body += "<table border=\"1\" width=\"100%\" style=\"border-collapse: collapse; border: 1px solid #000066;\" >";
-                body += "<thead>";
-                body += "<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>";
-                body += "</thead>";
-
-                body += "<tbody>";
-
-                foreach (var task in tasks
-                    .Where(e => e.ProjectTaskPerformers.Any(p => p.UserId == user.UserId && !p.Deleted))
-                    .OrderBy(e => e.EndPlan)
-                    )
-                {
-                    body += "<tr>";
-                    body += $"<td>{task.Project.ProjectName}</td>";
-                    body += $"<td>{task.Details}</td>";
-
-                    if (task.EndPlan != null)
-                        body += $"<td>{task.EndPlan.Value:dd.MM.yyyy}</td>";
-                    else
-                        body += $"<td></td>";
-
-                    body += $"<td><a href=\"{_systemUrl}/#/project-tasks/{task.ProjectTaskId}\" target=\"_blank\">открыть</a> </td>";
-                    body += "</tr>";
-                }
-                body += "</tbody>";
-
-                body += "</table>";
-                body += "<br /><br /><i>Это письмо создано автоматически, отвечать на него не нужно.</i>";
-                body += "<br />- - -<br />";
-                body += $"<a href=\"{_systemUrl}\" target=\"_blank\"><b>{_systemName}</b></a>";
-
-                body = $"<font size=\"3\" color=\"#000066\" face=\"Trebuchet MS, Tahoma\">{body}</font>";
-
-                newMails.Add(new Mail()
-                {
-                    Topic = "Просроченные задания",
-                    Body = body,
-                    DateCreate = DateTime.Now,
-                    Address = user.Email,
-                });
-
-            }
+                newMails.Add(GetMailForTask(user, tasks));
 
             if (newMails.Count > 0)
             {
@@ -192,9 +134,7 @@ namespace RN_TaskManager.DAL.Repositories
             InitSmtp();
 
             foreach (var item in items)
-            {
                 SendMail(item);
-            }
 
             var needUpdateItems = items.Where(e => e.DateSend != null).ToList();
 
@@ -255,5 +195,78 @@ namespace RN_TaskManager.DAL.Repositories
             }
         }
 
+        private Mail GetMailForPerformer(User user, ProjectTask projectTask)
+        {
+            var body = $"{user.FirstName} {user.Patronymic}!<br />" +
+                       $"Для Вас назначена новая задача:<br /><br />" +
+                       $"<p>Проект: <b>{projectTask.Project.ProjectName}</b></p>" +
+                       $"<p>Описание задачи: <b>{projectTask.Details}</b></p>" +
+                       $"<p>Плановая дата начала работ: " + (projectTask.StartPlan != null ? $"{projectTask.StartPlan.Value:dd.MM.yyyy}" : $"-") + "</p>" +
+                       $"<p>Плановая дата окончания работ: " + (projectTask.EndPlan != null ? $"{projectTask.EndPlan.Value:dd.MM.yyyy}" : $"-") + "</p>" +
+                       $"<p><a href=\"{_systemUrl}/#/project-tasks/{projectTask.ProjectTaskId}\" target=\"_blank\">[открыть карточку задачи]</a></p>" +
+
+                       $"<br /><br /><i>Это письмо создано автоматически, отвечать на него не нужно.</i> <br />- - -<br />" +
+                       $"<a href=\"{_systemUrl}\" target=\"_blank\"><b>{_systemName}</b></a>";
+
+            body = $"<div style=\"font-sze:10px; color:#000066; font-family:Trebuchet MS, Tahoma\">{body}</div>";
+
+            var newMail = new Mail()
+            {
+                Topic = $"Новое задание №{projectTask.ProjectTaskId}",
+                Body = body,
+                DateCreate = DateTime.Now,
+                Address = user.Email,
+            };
+
+            return newMail;
+        }
+
+        private Mail GetMailForTask(User user, List<ProjectTask> tasks)
+        {
+            var body = $"{user.FirstName} {user.Patronymic}!<br />";
+            body += "Вам необходимо обратить внимание на следующие просроченные задачи:<br /><br />";
+            body += "<table border=\"1\" width=\"100%\" style=\"font-family:Trebuchet MS, Tahoma; border-collapse: collapse; border: 1px solid #000066;\" >";
+            body += "<thead>";
+            body += "<tr><th>Проект</th><th>Описание задачи</th><th>Плановая дата</th><th></th></tr>";
+            body += "</thead>";
+
+            body += "<tbody>";
+
+            foreach (var task in tasks
+                .Where(e => e.ProjectTaskPerformers.Any(p => p.UserId == user.UserId && !p.Deleted))
+                .OrderBy(e => e.EndPlan)
+                )
+            {
+                body += "<tr>";
+                body += $"<td>{task.Project.ProjectName}</td>";
+                body += $"<td>{task.Details}</td>";
+
+                if (task.EndPlan != null)
+                    body += $"<td>{task.EndPlan.Value:dd.MM.yyyy}</td>";
+                else
+                    body += $"<td></td>";
+
+                body += $"<td><a href=\"{_systemUrl}/#/project-tasks/{task.ProjectTaskId}\" target=\"_blank\">открыть</a> </td>";
+                body += "</tr>";
+            }
+            body += "</tbody>";
+
+            body += "</table>";
+            body += "<br /><br /><i>Это письмо создано автоматически, отвечать на него не нужно.</i>";
+            body += "<br />- - -<br />";
+            body += $"<a href=\"{_systemUrl}\" target=\"_blank\"><b>{_systemName}</b></a>";
+
+            body = $"<font size=\"3\" color=\"#000066\" face=\"Trebuchet MS, Tahoma\">{body}</font>";
+
+            var newMail = new Mail()
+            {
+                Topic = "Просроченные задания",
+                Body = body,
+                DateCreate = DateTime.Now,
+                Address = user.Email,
+            };
+
+            return newMail;
+        }
     }
 }
